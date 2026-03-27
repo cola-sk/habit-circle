@@ -1,0 +1,52 @@
+name: habit_circle
+description: 养西瓜 - 养成好习惯，每天学习就能把西瓜养得越来越大
+publish_to: 'none'
+version: 0.1.0+1
+
+environment:
+  sdk: '>=3.3.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # HTTP 客户端
+  dio: ^5.7.0
+
+  # 本地安全存储（JWT token）
+  flutter_secure_storage: ^9.2.2
+
+  # 状态管理
+  flutter_riverpod: ^2.5.1
+
+  # 路由
+  go_router: ^14.1.4
+
+  # 本地存储（离线任务缓存）
+  hive_flutter: ^1.1.0
+
+  # 宠物动画
+  rive: ^0.13.3
+
+  # UI/工具
+  intl: ^0.19.0
+  qr_flutter: ^4.1.0          # 生成邀请码二维码
+  mobile_scanner: ^5.1.1      # 扫描二维码
+  cached_network_image: ^3.3.1
+  flutter_animate: ^4.5.0     # 补间动画
+  lottie: ^3.1.2               # Lottie 动画（备用）
+  gap: ^3.0.1                  # 间距工具
+  collection: ^1.18.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/images/
+    - assets/animations/
+    - assets/pets/

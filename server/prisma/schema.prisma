@@ -1,0 +1,92 @@
+// This is your Prisma schema file
+// Learn more: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ── 用户 ───────────────────────────────────────────────────────
+model User {
+  id        String   @id @default(cuid())
+  phone     String   @unique
+  childName String   @default("")
+  circleId  String?
+
+  circle   Circle?  @relation("CircleMembers", fields: [circleId], references: [id])
+  pet      Pet?
+  taskLogs TaskLog[]
+
+  createdAt DateTime @default(now())
+
+  @@map("users")
+}
+
+// ── 宠物 ───────────────────────────────────────────────────────
+model Pet {
+  id           String    @id @default(cuid())
+  ownerId      String    @unique
+  owner        User      @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  name         String
+  species      String    // cat | dog | rabbit | dragon | hamster
+  level        Int       @default(1)
+  totalPoints  Int       @default(0)
+  lastFedAt    DateTime?
+  hungerStatus String    @default("normal") // happy|normal|hungry|starving|critical
+
+  createdAt    DateTime  @default(now())
+
+  @@map("pets")
+}
+
+// ── 任务记录 ──────────────────────────────────────────────────
+model TaskLog {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  taskType        String   // reading|piano|english|preview|homework|exercise|custom
+  taskName        String
+  durationMinutes Int      @default(0)
+  points          Int
+  completed       Boolean  @default(true)
+  date            String   // YYYY-MM-DD，方便按天聚合
+
+  createdAt       DateTime @default(now())
+
+  @@index([userId, date])
+  @@map("task_logs")
+}
+
+// ── 圈子 ──────────────────────────────────────────────────────
+model Circle {
+  id         String   @id @default(cuid())
+  name       String
+  inviteCode String   @unique
+  creatorId  String
+
+  members    User[]   @relation("CircleMembers")
+
+  createdAt  DateTime @default(now())
+
+  @@map("circles")
+}
+
+// ── 短信验证码 ────────────────────────────────────────────────
+model SmsCode {
+  id        String   @id @default(cuid())
+  phone     String
+  code      String
+  expiresAt DateTime
+  used      Boolean  @default(false)
+
+  createdAt DateTime @default(now())
+
+  @@index([phone])
+  @@map("sms_codes")
+}

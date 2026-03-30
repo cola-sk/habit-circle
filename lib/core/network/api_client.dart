@@ -95,6 +95,27 @@ class ApiClient {
     return _unwrap(resp);
   }
 
+  Future<void> delete(String path) async {
+    final resp = await _dio.delete(path);
+    final data = resp.data as Map<String, dynamic>;
+    if (data['success'] != true) {
+      throw ApiException(data['message'] as String? ?? '请求失败');
+    }
+  }
+
+  /// 返回 data 字段为 List 的接口（如 /api/task-templates, /api/user-tasks）
+  Future<List<dynamic>> getList(
+    String path, {
+    Map<String, dynamic>? queryParameters,
+  }) async {
+    final resp = await _dio.get(path, queryParameters: queryParameters);
+    final body = resp.data as Map<String, dynamic>;
+    if (body['success'] != true) {
+      throw ApiException(body['message'] as String? ?? '请求失败');
+    }
+    return body['data'] as List<dynamic>;
+  }
+
   Map<String, dynamic> _unwrap(Response resp) {
     final data = resp.data as Map<String, dynamic>;
     if (data['success'] != true) {

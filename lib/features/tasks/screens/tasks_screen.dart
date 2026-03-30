@@ -6,9 +6,10 @@ import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
 
 import '../../../core/constants/app_colors.dart';
-import '../../../core/constants/task_types.dart';
 import '../../../models/task_log_model.dart';
+import '../../../models/user_task_model.dart';
 import '../../../providers/task_provider.dart';
+import '../../../providers/user_task_provider.dart';
 import '../widgets/task_card_widget.dart';
 
 class TasksScreen extends ConsumerStatefulWidget {
@@ -19,14 +20,15 @@ class TasksScreen extends ConsumerStatefulWidget {
 }
 
 class _TasksScreenState extends ConsumerState<TasksScreen> {
-  static const _taskTypes = TaskType.values;
-  final Set<TaskType> _processingTasks = <TaskType>{};
+  /// userTaskId → 正在处理中（防止重复触发）
+  final Set<String> _processingTasks = {};
 
   @override
   Widget build(BuildContext context) {
     final todayPoints = ref.watch(todayPointsProvider);
     final logs =
         ref.watch(todayTaskLogsProvider).valueOrNull ?? const <TaskLogModel>[];
+    final userTasksAsync = ref.watch(userTasksProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -52,52 +54,113 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
             ),
           ],
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.add_circle_outline),
+            tooltip: '添加任务',
+            onPressed: () => _showAddTaskSheet(context),
+          ),
+        ],
       ),
-      body: ListView.builder(
-        padding: const EdgeInsets.fromLTRB(20, 8, 20, 100),
-        itemCount: _taskTypes.length,
-        itemBuilder: (context, index) {
-          final taskType = _taskTypes[index];
-          final isCompleted = logs.any(
-            (e) => e.taskType == taskType && e.completed,
-          );
-
-          return TaskCardWidget(
-            taskType: taskType,
-            isCompleted: isCompleted,
-            isProcessing: _processingTasks.contains(taskType),
-            onUploadEvidence: () => _uploadEvidence(taskType),
+      body: userTasksAsync.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (e, _) => Center(child: Text('加载失败：$e')),
+        data: (userTasks) {
+          if (userTasks.isEmpty) {
+            return _EmptyTasksHint(onAdd: () => _showAddTaskSheet(context));
+          }
+          return ListView.builder(
+            padding: const EdgeInsets.fromLTRB(20, 8, 20, 100),
+            itemCount: userTasks.length,
+            itemBuilder: (context, index) {
+              final userTask = userTasks[index];
+              final isCompleted = logs.any(
+                (e) => e.taskType.name == userTask.template.key && e.completed,
+              );
+              return TaskCardWidget(
+                userTask: userTask,
+                isCompleted: isCompleted,
+                isProcessing: _processingTasks.contains(userTask.id),
+                onUploadEvidence: (evidenceType) =>
+                    _uploadEvidence(userTask, evidenceType),
+                onDelete: () => _confirmDelete(context, userTask),
+              );
+            },
           );
         },
       ),
     );
   }
 
-  Future<void> _uploadEvidence(TaskType taskType) async {
-    if (_processingTasks.contains(taskType)) return;
-    setState(() => _processingTasks.add(taskType));
+  // ── 添加任务弹窗 ─────────────────────────────────────────────
+
+  Future<void> _showAddTaskSheet(BuildContext context) async {
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (_) => const _AddTaskSheet(),
+    );
+  }
+
+  // ── 删除确认 ─────────────────────────────────────────────────
+
+  Future<void> _confirmDelete(
+      BuildContext context, UserTaskModel userTask) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('删除「${userTask.template.name}」'),
+        content: const Text('删除后今日任务列表中将不再显示此任务，历史记录仍保留。'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('取消'),
+          ),
+          TextButton(
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('删除'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    await ref.read(manageUserTaskProvider.notifier).removeTask(userTask.id);
+  }
+
+  // ── 上传证据 ─────────────────────────────────────────────────
+
+  Future<void> _uploadEvidence(
+      UserTaskModel userTask, String evidenceType) async {
+    if (_processingTasks.contains(userTask.id)) return;
+    setState(() => _processingTasks.add(userTask.id));
 
     try {
       String? evidencePath;
-      if (taskType.evidenceType == TaskEvidenceType.image) {
+      if (evidenceType == 'image') {
         evidencePath = await _captureImage();
+      } else if (evidenceType == 'video') {
+        evidencePath = await _recordVideo();
       } else {
-        evidencePath = await _recordAudio(taskType);
+        evidencePath = await _recordAudio(userTask.template.name);
       }
-
       if (evidencePath == null || evidencePath.isEmpty) return;
 
-      await ref.read(submitTaskProvider.notifier).submit(
-            taskType: taskType,
-            durationMinutes: taskType.evidenceSubmitMinutes,
+      final tpl = userTask.template;
+      await ref.read(submitTaskProvider.notifier).submitByTemplate(
+            templateKey: tpl.key,
+            templateName: tpl.name,
+            durationMinutes: tpl.isTimeBased ? 15 : 0,
           );
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            '${taskType.displayName} 证据已提交，任务完成 +${taskType.pointsPer15Min} 分',
-          ),
+          content: Text('${tpl.name} 证据已提交，完成 +${tpl.pointsPer15Min} 分'),
           backgroundColor: const Color(0xFF006B1B),
         ),
       );
@@ -110,9 +173,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
         ),
       );
     } finally {
-      if (mounted) {
-        setState(() => _processingTasks.remove(taskType));
-      }
+      if (mounted) setState(() => _processingTasks.remove(userTask.id));
     }
   }
 
@@ -126,7 +187,16 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
     return image?.path;
   }
 
-  Future<String?> _recordAudio(TaskType taskType) async {
+  Future<String?> _recordVideo() async {
+    final picker = ImagePicker();
+    final video = await picker.pickVideo(
+      source: ImageSource.camera,
+      maxDuration: const Duration(minutes: 2),
+    );
+    return video?.path;
+  }
+
+  Future<String?> _recordAudio(String taskName) async {
     final recorder = AudioRecorder();
     final hasPermission = await recorder.hasPermission();
     if (!hasPermission) {
@@ -169,7 +239,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
               try {
                 final dir = await getTemporaryDirectory();
                 final filePath =
-                    '${dir.path}/task_${taskType.name}_${DateTime.now().millisecondsSinceEpoch}.m4a';
+                    '${dir.path}/task_${DateTime.now().millisecondsSinceEpoch}.m4a';
                 await recorder.start(
                   const RecordConfig(
                     encoder: AudioEncoder.aacLc,
@@ -214,7 +284,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    '为「${taskType.displayName}」录音',
+                    '为「$taskName」录音',
                     style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w900,
@@ -265,5 +335,176 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
 
     await recorder.dispose();
     return outputPath;
+  }
+}
+
+// ── 空状态提示 ────────────────────────────────────────────────
+
+class _EmptyTasksHint extends StatelessWidget {
+  final VoidCallback onAdd;
+  const _EmptyTasksHint({required this.onAdd});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Text('🌱', style: TextStyle(fontSize: 52)),
+          const Gap(16),
+          const Text(
+            '还没有任务',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          const Gap(6),
+          const Text(
+            '点击右上角 + 添加今日要完成的任务',
+            style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
+          ),
+          const Gap(24),
+          FilledButton.icon(
+            onPressed: onAdd,
+            icon: const Icon(Icons.add),
+            label: const Text('添加任务'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── 添加任务底部弹窗 ──────────────────────────────────────────
+
+class _AddTaskSheet extends ConsumerWidget {
+  const _AddTaskSheet();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final templatesAsync = ref.watch(taskTemplatesProvider);
+    final userTasksAsync = ref.watch(userTasksProvider);
+    final manageState = ref.watch(manageUserTaskProvider);
+
+    final addedTemplateIds =
+        userTasksAsync.valueOrNull?.map((t) => t.template.id).toSet() ?? {};
+
+    return DraggableScrollableSheet(
+      initialChildSize: 0.6,
+      minChildSize: 0.4,
+      maxChildSize: 0.9,
+      expand: false,
+      builder: (_, scrollController) {
+        return Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 8, 8),
+              child: Row(
+                children: [
+                  const Text(
+                    '选择要添加的任务',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w900,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  const Spacer(),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ],
+              ),
+            ),
+            const Divider(height: 1),
+            Expanded(
+              child: templatesAsync.when(
+                loading: () =>
+                    const Center(child: CircularProgressIndicator()),
+                error: (e, _) => Center(child: Text('加载失败：$e')),
+                data: (templates) => ListView.builder(
+                  controller: scrollController,
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                  itemCount: templates.length,
+                  itemBuilder: (context, index) {
+                    final tpl = templates[index];
+                    final alreadyAdded = addedTemplateIds.contains(tpl.id);
+                    final color = Color(
+                      int.parse(tpl.colorHex.replaceAll('#', '0xFF')),
+                    );
+                    return ListTile(
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
+                      leading: Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: color.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Center(
+                          child: Text(tpl.emoji,
+                              style: const TextStyle(fontSize: 22)),
+                        ),
+                      ),
+                      title: Text(
+                        tpl.name,
+                        style: const TextStyle(
+                            fontWeight: FontWeight.w600, fontSize: 15),
+                      ),
+                      subtitle: Text(
+                        tpl.isTimeBased
+                            ? '每15分钟 +${tpl.pointsPer15Min}分'
+                            : '完成即得 +${tpl.pointsPer15Min}分',
+                        style: const TextStyle(
+                            fontSize: 12, color: AppColors.textSecondary),
+                      ),
+                      trailing: alreadyAdded
+                          ? const Icon(Icons.check_circle,
+                              color: AppColors.primary)
+                          : FilledButton(
+                              onPressed: manageState.isLoading
+                                  ? null
+                                  : () async {
+                                      await ref
+                                          .read(manageUserTaskProvider.notifier)
+                                          .addTask(tpl.id);
+                                      if (context.mounted) {
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          SnackBar(
+                                            content:
+                                                Text('已添加「${tpl.name}」'),
+                                            backgroundColor:
+                                                const Color(0xFF006B1B),
+                                          ),
+                                        );
+                                      }
+                                    },
+                              style: FilledButton.styleFrom(
+                                backgroundColor:
+                                    color.withValues(alpha: 0.85),
+                                minimumSize: const Size(60, 34),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 14),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                              ),
+                              child: const Text('添加',
+                                  style: TextStyle(fontSize: 13)),
+                            ),
+                    );
+                  },
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 }

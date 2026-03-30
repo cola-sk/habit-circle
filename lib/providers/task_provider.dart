@@ -36,11 +36,29 @@ class SubmitTaskNotifier extends StateNotifier<AsyncValue<void>> {
   }) async {
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
-      // uid 由服务端从 JWT 自动识别，客户端不需要传递
       final log = TaskLogModel.create(
         uid: '',
         taskType: taskType,
         customName: customName,
+        durationMinutes: durationMinutes,
+      );
+      await _ref.read(taskRepositoryProvider).saveLog(log);
+    });
+  }
+
+  /// 通过模板 key 提交任务（动态任务列表使用）
+  Future<void> submitByTemplate({
+    required String templateKey,
+    required String templateName,
+    required int durationMinutes,
+  }) async {
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(() async {
+      final taskType = TaskTypeExtension.fromString(templateKey);
+      final log = TaskLogModel.create(
+        uid: '',
+        taskType: taskType,
+        customName: templateName,
         durationMinutes: durationMinutes,
       );
       await _ref.read(taskRepositoryProvider).saveLog(log);

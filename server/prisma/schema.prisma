@@ -18,9 +18,10 @@ model User {
   childName String   @default("")
   circleId  String?
 
-  circle   Circle?  @relation("CircleMembers", fields: [circleId], references: [id])
-  pet      Pet?
-  taskLogs TaskLog[]
+  circle    Circle?    @relation("CircleMembers", fields: [circleId], references: [id])
+  pet       Pet?
+  taskLogs  TaskLog[]
+  userTasks UserTask[]
 
   createdAt DateTime @default(now())
 
@@ -80,6 +81,40 @@ model Circle {
   createdAt  DateTime @default(now())
 
   @@map("circles")
+}
+
+// ── 全局任务模板 ──────────────────────────────────────────────
+model TaskTemplate {
+  id             String     @id @default(cuid())
+  key            String     @unique  // reading|piano|english|preview|homework|exercise|custom
+  name           String
+  emoji          String
+  colorHex       String
+  pointsPer15Min Int
+  isTimeBased    Boolean    @default(true)
+  evidenceTypes  String[]                     // ["image", "audio"]
+  sortOrder      Int        @default(0)
+  isActive       Boolean    @default(true)
+  isDefault      Boolean    @default(false) // 新用户自动添加
+
+  userTasks      UserTask[]
+
+  @@map("task_templates")
+}
+
+// ── 用户已启用任务 ────────────────────────────────────────────
+model UserTask {
+  id         String       @id @default(cuid())
+  userId     String
+  user       User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  templateId String
+  template   TaskTemplate @relation(fields: [templateId], references: [id])
+
+  createdAt  DateTime     @default(now())
+
+  @@unique([userId, templateId])
+  @@index([userId])
+  @@map("user_tasks")
 }
 
 // ── 短信验证码 ────────────────────────────────────────────────

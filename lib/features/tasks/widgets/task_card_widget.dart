@@ -2,28 +2,31 @@ import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 
 import '../../../core/constants/app_colors.dart';
-import '../../../core/constants/task_types.dart';
+import '../../../models/user_task_model.dart';
 
-/// 任务卡片（证据上传模式）
+/// 任务卡片（基于 UserTaskModel，支持多证据类型 + 删除）
 class TaskCardWidget extends StatelessWidget {
-  final TaskType taskType;
+  final UserTaskModel userTask;
   final bool isCompleted;
   final bool isProcessing;
-  final VoidCallback onUploadEvidence;
+
+  /// 触发上传证据，参数为证据类型 "image" | "audio"
+  final ValueChanged<String> onUploadEvidence;
+  final VoidCallback onDelete;
 
   const TaskCardWidget({
     super.key,
-    required this.taskType,
+    required this.userTask,
     required this.isCompleted,
     required this.isProcessing,
     required this.onUploadEvidence,
+    required this.onDelete,
   });
 
   @override
   Widget build(BuildContext context) {
-    final color = Color(
-      int.parse(taskType.colorHex.replaceAll('#', '0xFF')),
-    );
+    final tpl = userTask.template;
+    final color = Color(int.parse(tpl.colorHex.replaceAll('#', '0xFF')));
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -39,6 +42,7 @@ class TaskCardWidget extends StatelessWidget {
       ),
       child: Row(
         children: [
+          // 图标
           Container(
             width: 50,
             height: 50,
@@ -47,16 +51,17 @@ class TaskCardWidget extends StatelessWidget {
               borderRadius: BorderRadius.circular(14),
             ),
             child: Center(
-              child: Text(taskType.emoji, style: const TextStyle(fontSize: 24)),
+              child: Text(tpl.emoji, style: const TextStyle(fontSize: 24)),
             ),
           ),
           const Gap(14),
+          // 任务名称 + 积分说明
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  taskType.displayName,
+                  tpl.name,
                   style: const TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.bold,
@@ -65,7 +70,9 @@ class TaskCardWidget extends StatelessWidget {
                 ),
                 const Gap(3),
                 Text(
-                  '完成方式：${taskType.evidenceType.displayName}',
+                  tpl.isTimeBased
+                      ? '每15分钟 +${tpl.pointsPer15Min}分'
+                      : '完成即得 +${tpl.pointsPer15Min}分',
                   style: const TextStyle(
                     fontSize: 12,
                     color: AppColors.textSecondary,
@@ -74,17 +81,17 @@ class TaskCardWidget extends StatelessWidget {
               ],
             ),
           ),
+          const Gap(8),
+          // 右侧操作区
           if (isCompleted)
             const _CompletedChip()
           else
-            _UploadButton(
+            _ActionArea(
+              template: tpl,
               color: color,
-              label: taskType.submitActionLabel,
-              icon: taskType.evidenceType == TaskEvidenceType.image
-                  ? Icons.camera_alt
-                  : Icons.mic,
-              isLoading: isProcessing,
-              onTap: onUploadEvidence,
+              isProcessing: isProcessing,
+              onUploadEvidence: onUploadEvidence,
+              onDelete: onDelete,
             ),
         ],
       ),
@@ -92,17 +99,90 @@ class TaskCardWidget extends StatelessWidget {
   }
 }
 
-class _UploadButton extends StatelessWidget {
+// ── 右侧操作区：证据按钮 + 删除 ──────────────────────────────
+
+class _ActionArea extends StatelessWidget {
+  final TaskTemplateModel template;
   final Color color;
-  final String label;
+  final bool isProcessing;
+  final ValueChanged<String> onUploadEvidence;
+  final VoidCallback onDelete;
+
+  const _ActionArea({
+    required this.template,
+    required this.color,
+    required this.isProcessing,
+    required this.onUploadEvidence,
+    required this.onDelete,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (template.supportsImage)
+          _EvidenceBtn(
+            color: color,
+            icon: Icons.camera_alt,
+            label: '拍照',
+            isLoading: isProcessing,
+            onTap: () => onUploadEvidence('image'),
+          ),
+        if (template.supportsImage && (template.supportsAudio || template.supportsVideo))
+          const SizedBox(width: 6),
+        if (template.supportsAudio)
+          _EvidenceBtn(
+            color: color,
+            icon: Icons.mic,
+            label: '录音',
+            isLoading: isProcessing,
+            onTap: () => onUploadEvidence('audio'),
+          ),
+        if (template.supportsAudio && template.supportsVideo)
+          const SizedBox(width: 6),
+        if (template.supportsVideo)
+          _EvidenceBtn(
+            color: color,
+            icon: Icons.videocam,
+            label: '录像',
+            isLoading: isProcessing,
+            onTap: () => onUploadEvidence('video'),
+          ),
+        const SizedBox(width: 6),
+        // 删除按钮
+        GestureDetector(
+          onTap: onDelete,
+          child: Container(
+            width: 34,
+            height: 34,
+            decoration: BoxDecoration(
+              color: const Color(0x0FFF3B30),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: const Icon(
+              Icons.delete_outline,
+              size: 18,
+              color: Color(0xFFFF3B30),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _EvidenceBtn extends StatelessWidget {
+  final Color color;
   final IconData icon;
+  final String label;
   final bool isLoading;
   final VoidCallback onTap;
 
-  const _UploadButton({
+  const _EvidenceBtn({
     required this.color,
-    required this.label,
     required this.icon,
+    required this.label,
     required this.isLoading,
     required this.onTap,
   });
@@ -114,24 +194,23 @@ class _UploadButton extends StatelessWidget {
       style: FilledButton.styleFrom(
         backgroundColor: color.withValues(alpha: 0.9),
         foregroundColor: Colors.white,
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        minimumSize: const Size(112, 42),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        minimumSize: const Size(0, 36),
+        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(10),
         ),
       ),
       icon: isLoading
           ? const SizedBox(
-              width: 14,
-              height: 14,
+              width: 13,
+              height: 13,
               child: CircularProgressIndicator(
-                strokeWidth: 2,
-                color: Colors.white,
-              ),
+                  strokeWidth: 2, color: Colors.white),
             )
-          : Icon(icon, size: 16),
+          : Icon(icon, size: 14),
       label: Text(
-        isLoading ? '处理中' : label,
+        isLoading ? '…' : label,
         style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
       ),
     );

@@ -25,6 +25,11 @@ class ApiEndpoints {
   static String taskEvidence(String taskId) => '/api/tasks/$taskId/evidence';
   static String taskConfirm(String taskId)  => '/api/tasks/$taskId/confirm';
 
+  // Task templates & user tasks
+  static const taskTemplates = '/api/task-templates';
+  static const userTasks = '/api/user-tasks';
+  static String userTaskById(String id) => '/api/user-tasks/$id';
+
   // Circles
   static const circles     = '/api/circles';
   static const joinCircle  = '/api/circles/join';

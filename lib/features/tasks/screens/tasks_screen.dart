@@ -1,4 +1,8 @@
+import 'dart:io';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:image_picker/image_picker.dart';
@@ -148,7 +152,17 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
       } else {
         evidencePath = await _recordAudio(userTask.template.name);
       }
-      if (evidencePath == null || evidencePath.isEmpty) return;
+      if (evidencePath == null || evidencePath.isEmpty) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('未选择或未采集到证据'),
+              backgroundColor: Color(0xFF6F787D),
+            ),
+          );
+        }
+        return;
+      }
 
       final tpl = userTask.template;
       await ref.read(submitTaskProvider.notifier).submitByTemplate(
@@ -178,22 +192,139 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
   }
 
   Future<String?> _captureImage() async {
+    final source = await _pickMediaSource(label: '拍照');
+    if (source == null) return null;
+
     final picker = ImagePicker();
-    final image = await picker.pickImage(
-      source: ImageSource.camera,
-      imageQuality: 85,
-      maxWidth: 1600,
-    );
-    return image?.path;
+    XFile? image;
+    try {
+      image = await picker.pickImage(
+        source: source,
+        imageQuality: 85,
+        maxWidth: 1600,
+      );
+    } on PlatformException catch (e) {
+      _showInfo('打开图片选择失败：${e.message ?? e.code}');
+      return null;
+    }
+    if (image == null) return null;
+    if (source == ImageSource.gallery && !_isFromToday(image.path)) {
+      if (mounted) {
+        await showDialog<void>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: const Text('照片不是今天的'),
+            content: const Text('请选择今天拍摄的照片作为任务证据。'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('知道了'),
+              ),
+            ],
+          ),
+        );
+      }
+      return null;
+    }
+    return image.path;
   }
 
   Future<String?> _recordVideo() async {
+    final source = await _pickMediaSource(label: '录像');
+    if (source == null) return null;
+
     final picker = ImagePicker();
-    final video = await picker.pickVideo(
-      source: ImageSource.camera,
-      maxDuration: const Duration(minutes: 2),
+    XFile? video;
+    try {
+      video = await picker.pickVideo(
+        source: source,
+        maxDuration: const Duration(minutes: 2),
+      );
+    } on PlatformException catch (e) {
+      _showInfo('打开视频选择失败：${e.message ?? e.code}');
+      return null;
+    }
+    if (video == null) return null;
+    if (source == ImageSource.gallery && !_isFromToday(video.path)) {
+      if (mounted) {
+        await showDialog<void>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: const Text('视频不是今天的'),
+            content: const Text('请选择今天录制的视频作为任务证据。'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('知道了'),
+              ),
+            ],
+          ),
+        );
+      }
+      return null;
+    }
+    return video.path;
+  }
+
+  /// 用 AlertDialog 选择来源（避免 ModalBottomSheet 与原生 picker 的 iOS 视图控制器冲突）
+  Future<ImageSource?> _pickMediaSource({required String label}) {
+    return showDialog<ImageSource>(
+      context: context,
+      builder: (ctx) => SimpleDialog(
+        title: Text('选择$label方式'),
+        children: [
+          SimpleDialogOption(
+            onPressed: () => Navigator.pop(ctx, ImageSource.camera),
+            child: const Row(
+              children: [
+                Icon(Icons.camera_alt_outlined),
+                SizedBox(width: 12),
+                Text('现在拍摄', style: TextStyle(fontSize: 16)),
+              ],
+            ),
+          ),
+          SimpleDialogOption(
+            onPressed: () => Navigator.pop(ctx, ImageSource.gallery),
+            child: const Row(
+              children: [
+                Icon(Icons.photo_library_outlined),
+                SizedBox(width: 12),
+                Text('从相册选取（仅限今日）', style: TextStyle(fontSize: 16)),
+              ],
+            ),
+          ),
+          SimpleDialogOption(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('取消',
+                style: TextStyle(fontSize: 16, color: Colors.grey)),
+          ),
+        ],
+      ),
     );
-    return video?.path;
+  }
+
+  void _showInfo(String text) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(text),
+        backgroundColor: const Color(0xFF6F787D),
+      ),
+    );
+  }
+
+  /// 校验文件修改时间是否为今天（debug 模式跳过）
+  bool _isFromToday(String path) {
+    if (kDebugMode) return true;
+    try {
+      final modified = File(path).statSync().modified;
+      final now = DateTime.now();
+      return modified.year == now.year &&
+          modified.month == now.month &&
+          modified.day == now.day;
+    } catch (_) {
+      return true;
+    }
   }
 
   Future<String?> _recordAudio(String taskName) async {
@@ -422,8 +553,7 @@ class _AddTaskSheet extends ConsumerWidget {
             const Divider(height: 1),
             Expanded(
               child: templatesAsync.when(
-                loading: () =>
-                    const Center(child: CircularProgressIndicator()),
+                loading: () => const Center(child: CircularProgressIndicator()),
                 error: (e, _) => Center(child: Text('加载失败：$e')),
                 data: (templates) => ListView.builder(
                   controller: scrollController,
@@ -476,8 +606,7 @@ class _AddTaskSheet extends ConsumerWidget {
                                         ScaffoldMessenger.of(context)
                                             .showSnackBar(
                                           SnackBar(
-                                            content:
-                                                Text('已添加「${tpl.name}」'),
+                                            content: Text('已添加「${tpl.name}」'),
                                             backgroundColor:
                                                 const Color(0xFF006B1B),
                                           ),
@@ -485,11 +614,10 @@ class _AddTaskSheet extends ConsumerWidget {
                                       }
                                     },
                               style: FilledButton.styleFrom(
-                                backgroundColor:
-                                    color.withValues(alpha: 0.85),
+                                backgroundColor: color.withValues(alpha: 0.85),
                                 minimumSize: const Size(60, 34),
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 14),
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 14),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(10),
                                 ),

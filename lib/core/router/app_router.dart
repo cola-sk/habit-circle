@@ -23,33 +23,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: '/home',
     redirect: (context, state) {
-      final isLoggedIn = authState.valueOrNull == true;
-      final user = currentUser.valueOrNull;
-
-      // 未登录，跳到欢迎页
-      if (!isLoggedIn) {
-        if (state.matchedLocation.startsWith('/onboarding')) return null;
-        return '/onboarding/welcome';
-      }
-
-      // 已登录但尚未创建用户资料
-      if (user == null) return null; // 等待加载
-
-      if (user.childName.isEmpty) {
-        return '/onboarding/profile';
-      }
-
-      // 已登录但尚未加入圈子
-      if (user.circleId == null &&
-          !state.matchedLocation.startsWith('/onboarding/circle')) {
-        return '/onboarding/circle';
-      }
-
-      // 已完成 onboarding，不允许再进入 onboarding
-      if (state.matchedLocation.startsWith('/onboarding')) {
-        return '/home';
-      }
-
+      // TODO: 恢复登录校验
+      // final isLoggedIn = authState.valueOrNull == true;
+      // if (!isLoggedIn) {
+      //   if (state.matchedLocation.startsWith('/onboarding')) return null;
+      //   return '/onboarding/welcome';
+      // }
       return null;
     },
     routes: [

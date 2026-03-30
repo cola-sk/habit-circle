@@ -24,7 +24,8 @@ class PetModel {
   factory PetModel.fromJson(Map<String, dynamic> data) => PetModel(
         ownerId: data['ownerId'] as String? ?? '',
         name: data['name'] as String? ?? '我的宠物',
-        species: PetSpeciesExtension.fromString(data['species'] as String? ?? 'cat'),
+        species:
+            PetSpeciesExtension.fromString(data['species'] as String? ?? 'cat'),
         level: (data['level'] as num?)?.toInt() ?? 1,
         totalPoints: (data['totalPoints'] as num?)?.toInt() ?? 0,
         lastFedAt: data['lastFedAt'] != null
@@ -32,11 +33,17 @@ class PetModel {
             : null,
         hungerStatus: HungerStatusExtension.fromString(
             data['hungerStatus'] as String? ?? 'normal'),
-        createdAt:
-            DateTime.tryParse(data['createdAt'] as String? ?? '') ?? DateTime.now(),
+        createdAt: DateTime.tryParse(data['createdAt'] as String? ?? '') ??
+            DateTime.now(),
       );
 
-  String get growthStage => PetLevelThresholds.growthStageName(level);
+  /// 成长阶段 key：seed/sprout/vine/flower/fruit/ripe
+  String get growthStage =>
+      PetLevelThresholds.growthStageFromPoints(totalPoints).name;
+
+  /// 成长阶段中文：种子期/萌芽期/抽藤期/开花期/结果期/成熟期
+  String get growthStageDisplayName =>
+      PetLevelThresholds.growthStageFromPoints(totalPoints).displayName;
 
   int get pointsToNextLevel {
     final nextThreshold = PetLevelThresholds.nextLevelThreshold(level);

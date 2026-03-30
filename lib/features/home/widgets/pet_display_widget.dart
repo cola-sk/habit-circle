@@ -22,8 +22,8 @@ class PetDisplayWidget extends ConsumerWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            statusColor.withOpacity(0.15),
-            AppColors.primary.withOpacity(0.08),
+            statusColor.withValues(alpha: 0.15),
+            AppColors.primary.withValues(alpha: 0.08),
           ],
         ),
         borderRadius: BorderRadius.circular(28),
@@ -38,7 +38,7 @@ class PetDisplayWidget extends ConsumerWidget {
               width: 120,
               height: 120,
               decoration: BoxDecoration(
-                color: statusColor.withOpacity(0.1),
+                color: statusColor.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
             ),
@@ -70,7 +70,7 @@ class PetDisplayWidget extends ConsumerWidget {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                   decoration: BoxDecoration(
-                    color: statusColor.withOpacity(0.2),
+                    color: statusColor.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
@@ -100,11 +100,11 @@ class PetDisplayWidget extends ConsumerWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.8),
+                color: Colors.white.withValues(alpha: 0.8),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(
-                _growthStageLabel(pet.growthStage),
+                pet.growthStageDisplayName,
                 style: const TextStyle(
                   fontSize: 12,
                   color: AppColors.textSecondary,
@@ -119,11 +119,16 @@ class PetDisplayWidget extends ConsumerWidget {
 
   Color _statusColor(HungerStatus status) {
     switch (status) {
-      case HungerStatus.happy:    return AppColors.petHappy;
-      case HungerStatus.normal:   return AppColors.petNormal;
-      case HungerStatus.hungry:   return AppColors.petHungry;
-      case HungerStatus.starving: return AppColors.petStarving;
-      case HungerStatus.critical: return AppColors.petCritical;
+      case HungerStatus.happy:
+        return AppColors.petHappy;
+      case HungerStatus.normal:
+        return AppColors.petNormal;
+      case HungerStatus.hungry:
+        return AppColors.petHungry;
+      case HungerStatus.starving:
+        return AppColors.petStarving;
+      case HungerStatus.critical:
+        return AppColors.petCritical;
     }
   }
 
@@ -131,14 +136,6 @@ class PetDisplayWidget extends ConsumerWidget {
     if (level >= 7) return 80;
     if (level >= 4) return 64;
     return 52;
-  }
-
-  String _growthStageLabel(String stage) {
-    switch (stage) {
-      case 'juvenile': return '少年期';
-      case 'adult':    return '成年期';
-      default:         return '幼崽期';
-    }
   }
 }
 
@@ -157,7 +154,7 @@ class _LevelBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withOpacity(0.3),
+            color: AppColors.primary.withValues(alpha: 0.3),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),

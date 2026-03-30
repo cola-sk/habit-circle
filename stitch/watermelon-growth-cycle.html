@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+
+<html class="light" lang="zh-CN"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>西瓜成长全过程 - Grow Watermelon</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&amp;family=Be+Vietnam+Pro:wght@400;500;600&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "background": "#eff8fe",
+              "secondary-container": "#91f78e",
+              "secondary-fixed-dim": "#83e881",
+              "outline": "#6f787d",
+              "inverse-on-surface": "#959ea4",
+              "tertiary-container": "#fdd34d",
+              "primary": "#b21d27",
+              "surface": "#eff8fe",
+              "on-error": "#ffefec",
+              "inverse-surface": "#070f13",
+              "on-secondary": "#d1ffc8",
+              "on-primary": "#ffefee",
+              "tertiary-dim": "#624d00",
+              "on-error-container": "#520c00",
+              "primary-dim": "#a10c1d",
+              "on-tertiary-fixed-variant": "#675200",
+              "surface-container-high": "#d8e4ec",
+              "secondary-fixed": "#91f78e",
+              "surface-container-low": "#e8f2f9",
+              "error-container": "#f95630",
+              "on-surface": "#273034",
+              "error": "#b02500",
+              "primary-container": "#ff7671",
+              "on-primary-fixed": "#000000",
+              "tertiary-fixed": "#fdd34d",
+              "on-secondary-container": "#005e17",
+              "primary-fixed-dim": "#ff5a59",
+              "on-secondary-fixed": "#00480f",
+              "surface-dim": "#c8d7df",
+              "on-tertiary": "#fff2d4",
+              "on-secondary-fixed-variant": "#00691a",
+              "primary-fixed": "#ff7671",
+              "tertiary-fixed-dim": "#eec540",
+              "inverse-primary": "#fd5556",
+              "on-surface-variant": "#545d62",
+              "on-primary-fixed-variant": "#60000b",
+              "surface-container": "#dfeaf1",
+              "surface-container-lowest": "#ffffff",
+              "surface-container-highest": "#d1dfe7",
+              "error-dim": "#b92902",
+              "surface-variant": "#d1dfe7",
+              "secondary-dim": "#005d16",
+              "outline-variant": "#a5aeb4",
+              "tertiary": "#705900",
+              "on-tertiary-container": "#5c4900",
+              "on-tertiary-fixed": "#463600",
+              "surface-tint": "#b21d27",
+              "on-primary-container": "#4e0007",
+              "on-background": "#273034",
+              "surface-bright": "#eff8fe",
+              "secondary": "#006b1b"
+            },
+            fontFamily: {
+              "headline": ["Plus Jakarta Sans"],
+              "body": ["Be Vietnam Pro"],
+              "label": ["Plus Jakarta Sans"]
+            },
+            borderRadius: {"DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+      .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      }
+      body {
+        font-family: 'Be Vietnam Pro', sans-serif;
+        background-color: #eff8fe;
+      }
+      .font-plus-jakarta {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+      }
+      .growth-path-line {
+        background: linear-gradient(to bottom, #91f78e 0%, #006b1b 100%);
+        width: 4px;
+        position: absolute;
+        left: 2.5rem;
+        top: 2rem;
+        bottom: 2rem;
+        z-index: 0;
+      }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="text-on-surface antialiased pb-32">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md shadow-sm shadow-red-500/10 flex justify-between items-center px-6 py-4 w-full">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-red-700 dark:text-red-400 text-2xl" data-icon="park">park</span>
+<h1 class="font-plus-jakarta font-bold tracking-tight text-lg text-red-700 dark:text-red-400">西瓜成长全过程</h1>
+</div>
+<div class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center border-2 border-primary-container overflow-hidden transition-transform hover:scale-105">
+<img alt="User Profile" class="w-full h-full object-cover" data-alt="cute clay-style 3D avatar of a friendly adult gardener smiling with a straw hat" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB9B6So9MEL9sEVKuUAZCvxnrZY3eR-Ko1pJ5om9QAVSSoazt7B6OJlEF6WKjlC7Uso0i2BpIt_9mkwmW3s97AGE2u7ApqZYodQaRukQu0gIbu0tCef4IxPLE08Mol0xPtF4SATtTMCN1gxCp79uwUC7MRfAAkDJ6sjOfD3c7sDKhR3rZHSaHl2eERP_-glhEv5Nkt1Y7Wv1dst3rd0bdhSIqGOqmC313Nfip98HKCPbL8OAE_sz_63EhegBmkYJbqAbG8Y0Cz9dVs"/>
+</div>
+</header>
+<main class="mt-24 px-6 max-w-2xl mx-auto relative">
+<!-- Introduction Card -->
+<div class="mb-12 p-8 bg-gradient-to-br from-primary to-primary-container rounded-xl text-on-primary shadow-lg relative overflow-hidden">
+<div class="relative z-10">
+<h2 class="text-3xl font-plus-jakarta font-extrabold mb-2 tracking-tight">生命的奇迹</h2>
+<p class="text-on-primary/90 leading-relaxed font-medium">见证一颗小小的种子如何跨越四季，最终成为清脆甜美的夏日果实。</p>
+</div>
+<!-- Decorative 3D Watermelon Slice -->
+<div class="absolute -right-4 -bottom-4 opacity-30 transform rotate-12 scale-125">
+<span class="material-symbols-outlined text-9xl" data-icon="water_full">water_full</span>
+</div>
+</div>
+<!-- Vertical Timeline Path -->
+<div class="relative">
+<!-- Connecting Line -->
+<div class="growth-path-line opacity-20"></div>
+<!-- Stage 1: Seed -->
+<div class="relative flex items-center gap-6 mb-12 z-10">
+<div class="flex-shrink-0 w-20 h-20 rounded-full bg-white shadow-xl flex items-center justify-center ring-4 ring-secondary-container">
+<img class="w-14 h-14 object-contain" data-alt="macro 3D render of a single plump dark brown watermelon seed with a polished shiny surface against a clean white background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCLesZY-58xfdUVx2xleexOejCGP80cfNQu0tKZf0dfr-EMOT1tdwfwWUkKzvLRPoGfdbMkJLdYznmM_av0DmCVk9N51S0zjp6qb3_ssEPF4dqQej7t--7u73gxt84Tzu9bNZY0ZDHck00opFD-HyB3G_mIt-D4j0uJDX4zvOPLcNbeHP-rBKqBs4IYbo7OGMDODrnnfdPy8wKmCC20gHHEJwFcPvxj__Rp8DG26gT-gjW8rbIWRAh7bg3pLnNu5g91qvn6JHLF6Yw"/>
+</div>
+<div class="flex-grow bg-surface-container-lowest p-6 rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.04)] border-l-8 border-tertiary">
+<h3 class="font-plus-jakarta font-bold text-xl mb-1 text-on-surface">1. 种子期 (Seed)</h3>
+<p class="text-on-surface-variant font-medium">生命的开始 - 蕴含无限可能的起点</p>
+</div>
+</div>
+<!-- Stage 2: Sprout -->
+<div class="relative flex items-center gap-6 mb-12 z-10">
+<div class="flex-shrink-0 w-20 h-20 rounded-full bg-white shadow-xl flex items-center justify-center ring-4 ring-secondary-container">
+<img class="w-14 h-14 object-contain" data-alt="vibrant 3D illustration of a tiny neon green sprout with two round leaves emerging from rich dark brown soil mounds" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD9d2PkOUCgsfHaSIXGZjJfCeAL7wNMBw7tE56g-4r9mVdVt_m9pRb7PoIcB9wZCLwriwHDqc7f7arqh5zeh8fFUzlHdkame29_ikSot27dkvwuaX3I5lTB9jCOVdX6F7FnR5yGC9gqkRjUyRrwQpEA3pfx0JLo422j0zGr7EwK9M13bL7Op0HwYslohmZ2K75Dczlhs5emveNHOfCHlhTlyf7ShaEtBr8Dv3VMbUTTWhIAacdThTBHOIX5TLR690uTVv_0JDy7Ei0"/>
+</div>
+<div class="flex-grow bg-surface-container-lowest p-6 rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.04)] border-l-8 border-secondary">
+<h3 class="font-plus-jakarta font-bold text-xl mb-1 text-on-surface">2. 萌芽期 (Sprout)</h3>
+<p class="text-on-surface-variant font-medium">破土而出 - 第一缕阳光下的勇敢跃迁</p>
+</div>
+</div>
+<!-- Stage 3: Vine -->
+<div class="relative flex items-center gap-6 mb-12 z-10">
+<div class="flex-shrink-0 w-20 h-20 rounded-full bg-white shadow-xl flex items-center justify-center ring-4 ring-secondary-container">
+<img class="w-14 h-14 object-contain" data-alt="stylized 3D curly green vine with jagged leaves crawling and twisting in a playful organic shape bright saturation" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCpI7JAJRYWzoDibbKveS9YGriM4A0PFduf2YGek_SfhNSqeWyC2oo_BNMTWouyYOFJLDdOr7hftQA68CleJLBQvZnUI45DgF6cERGvCLs3H4-FLMPgBBGzlO53qaeR5h1TUWWrL6JAcR55rj9wpnYjalvGbbYMaSRKOg26vmu00pdiDhtbhaGEiq6Kk6wbEoAZ68W8jUqow7YcuYnaVA1mig1o4ogOpgp_Il0VyBg-APspxAPGOrQLfLMg_cVxTOQKll3wdiKuvkQ"/>
+</div>
+<div class="flex-grow bg-surface-container-lowest p-6 rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.04)] border-l-8 border-primary-container">
+<h3 class="font-plus-jakarta font-bold text-xl mb-1 text-on-surface">3. 抽蔓期 (Vine)</h3>
+<p class="text-on-surface-variant font-medium">茁壮成长 - 蔓延的生命力铺满田野</p>
+</div>
+</div>
+<!-- Stage 4: Flower -->
+<div class="relative flex items-center gap-6 mb-12 z-10">
+<div class="flex-shrink-0 w-20 h-20 rounded-full bg-white shadow-xl flex items-center justify-center ring-4 ring-secondary-container">
+<img class="w-14 h-14 object-contain" data-alt="cute 3D bright yellow star-shaped watermelon flower with soft petals and a glowing center sunny lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCuReJjxjbBl9SjzB-WLbXx1O3rAfqjcE8F-m-cI32rO_VTrA5zj3kHkTJeLrPm_OY0jCf5tOmz9NZX5h_ODPLOrvqyzvFKyMcuhtcM-RFjKQlZ23sSAskj-C7RRm0nb1WS2938l45HDq4-WnEukqxgg8IHDM9drJuhBtOuLDQN17C-tOLgHGN_VqKXiVKg0froINJRU5lcMYhWLh7rmaRoumYEnOSJ3NeQvzU6Gn7ebzWFybWxoFHEmZOhIE8yLV6dfni3JM3n1ZM"/>
+</div>
+<div class="flex-grow bg-surface-container-lowest p-6 rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.04)] border-l-8 border-tertiary-container">
+<h3 class="font-plus-jakarta font-bold text-xl mb-1 text-on-surface">4. 开花期 (Flower)</h3>
+<p class="text-on-surface-variant font-medium">盛开之美 - 吸引蝴蝶的金黄色信号</p>
+</div>
+</div>
+<!-- Stage 5: Fruit -->
+<div class="relative flex items-center gap-6 mb-12 z-10">
+<div class="flex-shrink-0 w-20 h-20 rounded-full bg-white shadow-xl flex items-center justify-center ring-4 ring-secondary-container">
+<img class="w-14 h-14 object-contain" data-alt="small 3D round green marble sized watermelon with faint stripes sitting on soft soil very cute toy-like aesthetic" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCZe3iQPN2rW4lKeX2guFneZOx22fTjYCW0Rshc5IikBtDK8cgp7PB2uTC--OC-bzVq3j6RuQe-5CWiJ9MRKGLwmDfFtQ_WZmREYrftUYwV8I0LhxctRnirRsejcDEX0Swsauo0t-_LMgDmOVjkNO2v762Zbr2DN7oHqgcFL6iQm4WgxE-eVPqN4aZ5ZfrnRvjg92M3z4Pqg37AyQo37TXDVu_X1A3L3Z97GxlL0CVWMykGy3hKAc1riX5qG5G2XEzGNCjiwEwRlac"/>
+</div>
+<div class="flex-grow bg-surface-container-lowest p-6 rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.04)] border-l-8 border-secondary-container">
+<h3 class="font-plus-jakarta font-bold text-xl mb-1 text-on-surface">5. 结果期 (Fruit)</h3>
+<p class="text-on-surface-variant font-medium">初结硕果 - 孕育中的甜蜜希望</p>
+</div>
+</div>
+<!-- Stage 6: Mature -->
+<div class="relative flex items-center gap-6 mb-12 z-10">
+<div class="flex-shrink-0 w-20 h-20 rounded-full bg-white shadow-xl flex items-center justify-center ring-4 ring-secondary-container">
+<img class="w-14 h-14 object-contain" data-alt="large perfect round 3D watermelon with dark and light green stripes glossy skin high saturation studio lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCMKStiSJSNXQatxtEY7yF3J_i6YcsVJfNKg5iavGvdc3YpDBxqlPTpW30-Eea0Ho5BICr3TVaJjoyka5nouiKA5Dja9Bmxjk6Tv3AwX2UP_6vcygX8nZA38gdL82Fy7ivieNvRfFZBtdk9ul27cLU7MUuF73CAzasnnwWz0kqrEVhPy2FiIKIcbpw1Qk9OhAqY2-2sG2xrP-RCX8QY7kevhrCoEd5OI1mr1T_IXjTkiPqgQr4hwXE8dfpOcrvS8DhBoUgsG2Yq1sY"/>
+</div>
+<div class="flex-grow bg-surface-container-lowest p-6 rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.04)] border-l-8 border-primary">
+<h3 class="font-plus-jakarta font-bold text-xl mb-1 text-on-surface">6. 成熟期 (Mature)</h3>
+<p class="text-on-surface-variant font-medium">圆润香甜 - 收获夏日最灿烂的喜悦</p>
+</div>
+</div>
+</div>
+<!-- Footer Card -->
+<div class="mt-8 text-center p-8 bg-surface-container-low rounded-xl">
+<span class="material-symbols-outlined text-tertiary text-4xl mb-4" data-icon="auto_awesome">auto_awesome</span>
+<p class="text-on-surface-variant font-medium italic">"每一步成长，都值得被纪念"</p>
+</div>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full flex justify-around items-center px-4 pb-6 pt-3 bg-white/80 dark:bg-slate-900/80 backdrop-blur-lg z-50 rounded-t-[3rem] shadow-[0_-4px_24px_rgba(178,29,39,0.08)]">
+<!-- Growth (Active) -->
+<button class="flex flex-col items-center justify-center bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-full px-5 py-2 transition-all duration-150 active:scale-90">
+<span class="material-symbols-outlined mb-1" data-icon="nest_eco" style="font-variation-settings: 'FILL' 1;">nest_eco</span>
+<span class="font-plus-jakarta text-[10px] font-bold uppercase tracking-widest">生长 Growth</span>
+</button>
+<!-- Garden -->
+<button class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 px-5 py-2 hover:text-red-500 transition-colors">
+<span class="material-symbols-outlined mb-1" data-icon="psychiatry">psychiatry</span>
+<span class="font-plus-jakarta text-[10px] font-bold uppercase tracking-widest">花园 Garden</span>
+</button>
+<!-- Medals -->
+<button class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 px-5 py-2 hover:text-red-500 transition-colors">
+<span class="material-symbols-outlined mb-1" data-icon="workspace_premium">workspace_premium</span>
+<span class="font-plus-jakarta text-[10px] font-bold uppercase tracking-widest">成就 Medals</span>
+</button>
+<!-- Parents -->
+<button class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 px-5 py-2 hover:text-red-500 transition-colors">
+<span class="material-symbols-outlined mb-1" data-icon="settings_accessibility">settings_accessibility</span>
+<span class="font-plus-jakarta text-[10px] font-bold uppercase tracking-widest">家长 Parents</span>
+</button>
+</nav>
+</body></html>

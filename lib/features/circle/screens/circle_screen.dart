@@ -3,11 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 
 import '../../../core/constants/app_colors.dart';
-import '../../../core/constants/pet_species.dart';
+import '../../../core/widgets/app_top_bar.dart';
+import '../../../models/circle_model.dart';
+import '../../../models/pet_model.dart';
+import '../../../providers/auth_provider.dart';
 import '../../../providers/circle_provider.dart';
 import '../../../providers/pet_provider.dart';
-import '../../../providers/auth_provider.dart';
-import '../../../models/pet_model.dart';
+import '../widgets/plaza_pet_card_widget.dart';
 
 class CircleScreen extends ConsumerWidget {
   const CircleScreen({super.key});
@@ -24,27 +26,19 @@ class CircleScreen extends ConsumerWidget {
         body: Center(child: Text('加载失败: $e')),
       ),
       data: (circle) {
-        if (circle == null) {
-          return const _NoCirclePlaceholder();
-        }
-
-        return _CircleContent(
-          circleName: circle.name,
-          memberUids: circle.memberUids,
-        );
+        if (circle == null) return const _NoCirclePlaceholder();
+        return _PlazaContent(circle: circle);
       },
     );
   }
 }
 
-class _CircleContent extends ConsumerWidget {
-  final String circleName;
-  final List<String> memberUids;
+// ── 主内容 ───────────────────────────────────────────────────────────────────
 
-  const _CircleContent({
-    required this.circleName,
-    required this.memberUids,
-  });
+class _PlazaContent extends ConsumerWidget {
+  final CircleModel circle;
+
+  const _PlazaContent({required this.circle});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -52,209 +46,186 @@ class _CircleContent extends ConsumerWidget {
     final currentUid = ref.watch(currentUidProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Column(
-          children: [
-            Text(circleName),
-            Text(
-              '${memberUids.length} 位小伙伴',
-              style: const TextStyle(
-                fontSize: 12,
-                color: AppColors.textSecondary,
-                fontWeight: FontWeight.normal,
-              ),
+      backgroundColor: const Color(0xFFE8F5E9),
+      appBar: const AppTopBar(title: '西瓜广场'),
+      body: Stack(
+        children: [
+          // 点状背景装饰
+          Positioned.fill(
+            child: CustomPaint(painter: _DotPatternPainter()),
+          ),
+
+          petsAsync.when(
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (e, _) => Center(child: Text('加载失败: $e')),
+            data: (pets) => _PlazaBody(
+              circle: circle,
+              pets: pets,
+              currentUid: currentUid,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
-      body: petsAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('加载失败: $e')),
-        data: (pets) {
-          // 按今日状态排序（开心的在前），自己的宠物始终第一
-          final sorted = [...pets]..sort((a, b) {
-              if (a.ownerId == currentUid) return -1;
-              if (b.ownerId == currentUid) return 1;
-              return a.hungerStatus.index.compareTo(b.hungerStatus.index);
-            });
+    );
+  }
+}
 
-          return CustomScrollView(
-            slivers: [
-              // 今日积分榜 Top 3
-              SliverToBoxAdapter(
-                child: _LeaderboardWidget(pets: pets),
-              ),
+class _PlazaBody extends StatelessWidget {
+  final CircleModel circle;
+  final List<PetModel> pets;
+  final String? currentUid;
 
-              // 宠物网格
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
-                sliver: SliverGrid(
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) => _PetCard(
-                      pet: sorted[index],
-                      isMe: sorted[index].ownerId == currentUid,
+  const _PlazaBody({
+    required this.circle,
+    required this.pets,
+    required this.currentUid,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    // 自己在前，其余按等级降序
+    final sorted = [...pets]..sort((a, b) {
+        if (a.ownerId == currentUid) return -1;
+        if (b.ownerId == currentUid) return 1;
+        return b.level.compareTo(a.level);
+      });
+
+    // 找自己的宠物用于统计
+    final myPet = pets.where((p) => p.ownerId == currentUid).firstOrNull;
+    final myRank = sorted.indexWhere((p) => p.ownerId == currentUid) + 1;
+
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 120),
+      children: [
+        // ── 邀请横幅 ─────────────────────────────────
+        _InviteBanner(circleName: circle.name),
+
+        const Gap(16),
+
+        // ── 统计行 ──────────────────────────────────
+        _StatsRow(rank: myRank, points: myPet?.totalPoints ?? 0),
+
+        const Gap(24),
+
+        // ── 成长地标题 ──────────────────────────────
+        _SectionHeader(memberCount: circle.memberUids.length),
+
+        const Gap(16),
+
+        // ── 宠物卡片网格 ────────────────────────────
+        _PetGrid(pets: sorted, currentUid: currentUid),
+
+        const Gap(24),
+
+        // ── 园丁秘籍 ────────────────────────────────
+        const _TipCard(),
+      ],
+    );
+  }
+}
+
+// ── 邀请横幅 ─────────────────────────────────────────────────────────────────
+
+class _InviteBanner extends StatelessWidget {
+  final String circleName;
+
+  const _InviteBanner({required this.circleName});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFFFF4D4D), Color(0xFFFF8A8A)],
+        ),
+        borderRadius: BorderRadius.circular(28),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0xFFD32F2F),
+            offset: Offset(0, 8),
+            blurRadius: 0,
+          ),
+        ],
+      ),
+      child: Stack(
+        children: [
+          // 装饰图标
+          Positioned(
+            right: -12,
+            bottom: -12,
+            child: Icon(
+              Icons.park_rounded,
+              size: 120,
+              color: Colors.white.withValues(alpha: 0.12),
+            ),
+          ),
+
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.pets_rounded, color: Colors.white, size: 28),
+                  const SizedBox(width: 10),
+                  Text(
+                    circleName,
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w900,
+                      color: Colors.white,
                     ),
-                    childCount: sorted.length,
                   ),
-                  gridDelegate:
-                      const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 3,
-                    crossAxisSpacing: 10,
-                    mainAxisSpacing: 10,
-                    childAspectRatio: 0.85,
+                ],
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                '叫上小伙伴，一起把西瓜\n种得又大又甜！',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                  height: 1.5,
+                ),
+              ),
+              const SizedBox(height: 16),
+              GestureDetector(
+                onTap: () {/* TODO: 邀请家人 */},
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 20, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Color(0x20000000),
+                        offset: Offset(0, 3),
+                        blurRadius: 0,
+                      ),
+                    ],
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.group_add_rounded,
+                          color: Color(0xFFFF4D4D), size: 20),
+                      SizedBox(width: 8),
+                      Text(
+                        '邀请家人',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w900,
+                          color: Color(0xFFFF4D4D),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
             ],
-          );
-        },
-      ),
-    );
-  }
-}
-
-class _PetCard extends StatelessWidget {
-  final PetModel pet;
-  final bool isMe;
-
-  const _PetCard({required this.pet, required this.isMe});
-
-  @override
-  Widget build(BuildContext context) {
-    final statusColor = _statusColor(pet.hungerStatus);
-
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: isMe
-            ? Border.all(color: AppColors.primary, width: 2)
-            : null,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          if (isMe)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: BoxDecoration(
-                color: AppColors.primary,
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: const Text('我',
-                  style: TextStyle(fontSize: 10, color: Colors.white)),
-            ),
-
-          const Gap(4),
-
-          Text(
-            pet.species.emoji,
-            style: TextStyle(
-              fontSize: pet.level >= 7 ? 32 : (pet.level >= 4 ? 28 : 24),
-            ),
-          ),
-
-          const Gap(4),
-
-          Text(
-            pet.name,
-            style: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-              color: AppColors.textPrimary,
-            ),
-            overflow: TextOverflow.ellipsis,
-            maxLines: 1,
-          ),
-
-          const Gap(2),
-
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-            decoration: BoxDecoration(
-              color: statusColor.withOpacity(0.15),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Text(
-              _statusEmoji(pet.hungerStatus),
-              style: const TextStyle(fontSize: 10),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Color _statusColor(HungerStatus s) {
-    switch (s) {
-      case HungerStatus.happy:    return AppColors.petHappy;
-      case HungerStatus.normal:   return AppColors.petNormal;
-      case HungerStatus.hungry:   return AppColors.petHungry;
-      case HungerStatus.starving: return AppColors.petStarving;
-      case HungerStatus.critical: return AppColors.petCritical;
-    }
-  }
-
-  String _statusEmoji(HungerStatus s) {
-    switch (s) {
-      case HungerStatus.happy:    return '😄 开心';
-      case HungerStatus.normal:   return '😊 正常';
-      case HungerStatus.hungry:   return '😕 饿了';
-      case HungerStatus.starving: return '😢 很饿';
-      case HungerStatus.critical: return '💀 快救我';
-    }
-  }
-}
-
-class _LeaderboardWidget extends StatelessWidget {
-  final List<PetModel> pets;
-
-  const _LeaderboardWidget({required this.pets});
-
-  @override
-  Widget build(BuildContext context) {
-    // TODO: 需要结合今日积分数据排序，目前按 totalPoints 示意
-    final sorted = [...pets]
-      ..sort((a, b) => b.totalPoints.compareTo(a.totalPoints));
-    final top3 = sorted.take(3).toList();
-
-    return Container(
-      margin: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF6C63FF), Color(0xFF9D96FF)],
-        ),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            '🏆 今日最勤奋',
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
-          ),
-          const Gap(10),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: List.generate(
-              top3.length,
-              (i) => _RankItem(
-                rank: i + 1,
-                pet: top3[i],
-              ),
-            ),
           ),
         ],
       ),
@@ -262,33 +233,279 @@ class _LeaderboardWidget extends StatelessWidget {
   }
 }
 
-class _RankItem extends StatelessWidget {
+// ── 统计行 ────────────────────────────────────────────────────────────────────
+
+class _StatsRow extends StatelessWidget {
   final int rank;
-  final PetModel pet;
+  final int points;
 
-  const _RankItem({required this.rank, required this.pet});
+  const _StatsRow({required this.rank, required this.points});
 
   @override
   Widget build(BuildContext context) {
-    final medals = ['🥇', '🥈', '🥉'];
-    return Column(
+    return Row(
       children: [
-        Text(medals[rank - 1], style: const TextStyle(fontSize: 20)),
-        const Gap(4),
-        Text(
-          pet.species.emoji,
-          style: const TextStyle(fontSize: 24),
+        Expanded(
+          child: _StatCard(
+            icon: Icons.workspace_premium_rounded,
+            iconColor: const Color(0xFFFFD700),
+            label: '我的排名',
+            value: rank > 0 ? '第 $rank 名' : '--',
+          ),
         ),
-        const Gap(2),
-        Text(
-          pet.name,
-          style: const TextStyle(fontSize: 11, color: Colors.white),
-          overflow: TextOverflow.ellipsis,
+        const SizedBox(width: 12),
+        Expanded(
+          child: _StatCard(
+            icon: Icons.star_rounded,
+            iconColor: AppColors.secondary,
+            label: '西瓜子',
+            value: '$points',
+          ),
         ),
       ],
     );
   }
 }
+
+class _StatCard extends StatelessWidget {
+  final IconData icon;
+  final Color iconColor;
+  final String label;
+  final String value;
+
+  const _StatCard({
+    required this.icon,
+    required this.iconColor,
+    required this.label,
+    required this.value,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+            color: AppColors.secondary.withValues(alpha: 0.1), width: 1.5),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0xFFE0E0E0),
+            offset: Offset(0, 5),
+            blurRadius: 0,
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: iconColor.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Icon(icon, color: iconColor, size: 24),
+          ),
+          const SizedBox(width: 12),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w900,
+                  color: AppColors.textSecondary,
+                  letterSpacing: 1,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w900,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── 成长地标题 ────────────────────────────────────────────────────────────────
+
+class _SectionHeader extends StatelessWidget {
+  final int memberCount;
+
+  const _SectionHeader({required this.memberCount});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        const Icon(Icons.energy_savings_leaf_rounded,
+            color: AppColors.secondary, size: 28),
+        const SizedBox(width: 8),
+        const Text(
+          '西瓜成长地',
+          style: TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.w900,
+            color: AppColors.secondary,
+          ),
+        ),
+        const Spacer(),
+        Container(
+          padding:
+              const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: AppColors.secondary,
+            borderRadius: BorderRadius.circular(999),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0xFF2E7D32),
+                offset: Offset(0, 2),
+                blurRadius: 0,
+              ),
+            ],
+          ),
+          child: Text(
+            '$memberCount 位园丁',
+            style: const TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w900,
+              color: Colors.white,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ── 宠物网格 ──────────────────────────────────────────────────────────────────
+
+class _PetGrid extends StatelessWidget {
+  final List<PetModel> pets;
+  final String? currentUid;
+
+  const _PetGrid({required this.pets, required this.currentUid});
+
+  @override
+  Widget build(BuildContext context) {
+    if (pets.isEmpty) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(32),
+          child: Text(
+            '圈子里还没有宠物 🌱',
+            style: TextStyle(color: AppColors.textSecondary),
+          ),
+        ),
+      );
+    }
+
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        crossAxisSpacing: 16,
+        mainAxisSpacing: 24,
+        childAspectRatio: 0.78,
+      ),
+      itemCount: pets.length,
+      itemBuilder: (context, index) {
+        final pet = pets[index];
+        final isMe = pet.ownerId == currentUid;
+        // 取名字首字作为头像
+        final initial =
+            pet.name.isNotEmpty ? pet.name[0] : '?';
+        return PlazaPetCard(
+          pet: pet,
+          ownerInitial: initial,
+          isMe: isMe,
+          onCheer: isMe ? null : () {/* TODO: 加油功能 */},
+        );
+      },
+    );
+  }
+}
+
+// ── 园丁秘籍 ──────────────────────────────────────────────────────────────────
+
+class _TipCard extends StatelessWidget {
+  const _TipCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+            color: const Color(0xFFFFD700).withValues(alpha: 0.3), width: 2),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0xFFEEEEEE),
+            offset: Offset(0, 6),
+            blurRadius: 0,
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 52,
+            height: 52,
+            decoration: BoxDecoration(
+              color: const Color(0xFFFFD700).withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: const Icon(Icons.lightbulb_rounded,
+                color: Color(0xFFFFD700), size: 30),
+          ),
+          const SizedBox(width: 16),
+          const Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '园丁秘籍',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w900,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                SizedBox(height: 4),
+                Text(
+                  '给小伙伴加油可以获得额外种子奖励哦！',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const Icon(Icons.chevron_right_rounded,
+              color: AppColors.textSecondary),
+        ],
+      ),
+    );
+  }
+}
+
+// ── 无圈子占位 ────────────────────────────────────────────────────────────────
 
 class _NoCirclePlaceholder extends StatelessWidget {
   const _NoCirclePlaceholder();
@@ -296,25 +513,27 @@ class _NoCirclePlaceholder extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('圈子')),
+      backgroundColor: const Color(0xFFE8F5E9),
+      appBar: const AppTopBar(title: '西瓜广场'),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: const [
-            Text('🌐', style: TextStyle(fontSize: 64)),
+            Text('🌱', style: TextStyle(fontSize: 72)),
             Gap(16),
             Text(
               '还没有加入圈子',
               style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
+                fontSize: 20,
+                fontWeight: FontWeight.w900,
                 color: AppColors.textPrimary,
               ),
             ),
             Gap(8),
             Text(
-              '去「我的」页面创建或加入一个圈子',
-              style: TextStyle(color: AppColors.textSecondary),
+              '去「家长」页面创建或加入一个圈子',
+              style: TextStyle(
+                  color: AppColors.textSecondary, fontWeight: FontWeight.w600),
             ),
           ],
         ),
@@ -322,3 +541,28 @@ class _NoCirclePlaceholder extends StatelessWidget {
     );
   }
 }
+
+// ── 点状背景装饰画笔 ──────────────────────────────────────────────────────────
+
+class _DotPatternPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = const Color(0xFFA5D6A7)
+      ..style = PaintingStyle.fill;
+
+    const spacing = 32.0;
+    const radius = 2.0;
+
+    for (double x = 0; x < size.width; x += spacing) {
+      for (double y = 0; y < size.height; y += spacing) {
+        canvas.drawCircle(Offset(x, y), radius, paint);
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+

@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/network/api_client.dart';
@@ -18,12 +19,7 @@ class TaskRepository {
     return '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
   }
 
-  /// 今日任务轮询流（立即发射一次，之后每 10 秒刷新）
-  Stream<List<TaskLogModel>> watchTodayLogs() async* {
-    yield await _fetchTodayLogs();
-    yield* Stream.periodic(const Duration(seconds: 10))
-        .asyncMap((_) => _fetchTodayLogs());
-  }
+  Future<List<TaskLogModel>> fetchTodayLogs() => _fetchTodayLogs();
 
   Future<List<TaskLogModel>> _fetchTodayLogs() async {
     try {
@@ -40,11 +36,22 @@ class TaskRepository {
     }
   }
 
-  Future<void> saveLog(TaskLogModel log) async {
-    await _client.post(ApiEndpoints.tasks, body: {
+  Future<TaskLogModel> saveLog(TaskLogModel log) async {
+    final data = await _client.post(ApiEndpoints.tasks, body: {
       'taskType': log.taskType.name,
       'taskName': log.taskName,
       'durationMinutes': log.durationMinutes,
     });
+    return TaskLogModel.fromJson(data);
+  }
+
+  Future<void> uploadEvidence(
+      String taskId, List<int> bytes, String filename) async {
+    final file = MultipartFile.fromBytes(bytes, filename: filename);
+    final formData = FormData.fromMap({'file': file});
+    await _client.postFormData(
+      ApiEndpoints.taskEvidence(taskId),
+      formData: formData,
+    );
   }
 }

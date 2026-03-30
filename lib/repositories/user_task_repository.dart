@@ -28,12 +28,7 @@ class UserTaskRepository {
         .toList();
   }
 
-  /// 轮询流：立即发射一次，之后每 15 秒刷新
-  Stream<List<UserTaskModel>> watchUserTasks() async* {
-    yield await fetchUserTasks();
-    yield* Stream.periodic(const Duration(seconds: 15))
-        .asyncMap((_) => fetchUserTasks());
-  }
+
 
   /// 新增用户任务
   Future<UserTaskModel> addTask(String templateId) async {

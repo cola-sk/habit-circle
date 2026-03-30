@@ -12,11 +12,11 @@ final taskTemplatesProvider =
   return ref.read(userTaskRepositoryProvider).fetchTemplates();
 });
 
-/// 用户已启用任务（轮询流）
-final userTasksProvider = StreamProvider<List<UserTaskModel>>((ref) {
+/// 用户已启用任务
+final userTasksProvider = FutureProvider<List<UserTaskModel>>((ref) {
   final isLoggedIn = ref.watch(authStateNotifierProvider).isLoggedIn;
-  if (!isLoggedIn) return Stream.value([]);
-  return ref.watch(userTaskRepositoryProvider).watchUserTasks();
+  if (!isLoggedIn) return Future.value([]);
+  return ref.watch(userTaskRepositoryProvider).fetchUserTasks();
 });
 
 /// 管理用户任务（新增/删除）

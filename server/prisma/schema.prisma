@@ -59,8 +59,8 @@ model TaskLog {
   completed       Boolean  @default(true)
   date            String   // YYYY-MM-DD，方便按天聚合
 
-  evidenceUrl     String?  // Vercel Blob URL（图片或音频）
-  evidenceType    String?  // "image" | "audio"
+  evidenceUrl     String?  // Vercel Blob URL（图片、音频或视频）
+  evidenceType    String?  // "image" | "audio" | "video"
   confirmed       Boolean  @default(false) // 家长是否已确认
 
   createdAt       DateTime @default(now())

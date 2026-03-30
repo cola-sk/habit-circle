@@ -87,6 +87,18 @@ class ApiClient {
     return _unwrap(resp);
   }
 
+  Future<Map<String, dynamic>> postFormData(
+    String path, {
+    required FormData formData,
+  }) async {
+    final resp = await _dio.post(
+      path,
+      data: formData,
+      options: Options(contentType: 'multipart/form-data'),
+    );
+    return _unwrap(resp);
+  }
+
   Future<Map<String, dynamic>> patch(
     String path, {
     Map<String, dynamic>? body,

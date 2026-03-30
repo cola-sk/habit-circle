@@ -5,11 +5,11 @@ import '../repositories/task_repository.dart';
 import '../core/constants/task_types.dart';
 import 'auth_provider.dart';
 
-/// 今日任务记录（轮询流）
-final todayTaskLogsProvider = StreamProvider<List<TaskLogModel>>((ref) {
+/// 今日任务记录
+final todayTaskLogsProvider = FutureProvider<List<TaskLogModel>>((ref) {
   final isLoggedIn = ref.watch(authStateNotifierProvider).isLoggedIn;
-  if (!isLoggedIn) return Stream.value(const []);
-  return ref.watch(taskRepositoryProvider).watchTodayLogs();
+  if (!isLoggedIn) return Future.value(const []);
+  return ref.watch(taskRepositoryProvider).fetchTodayLogs();
 });
 
 /// 今日累计积分
@@ -29,39 +29,49 @@ class SubmitTaskNotifier extends StateNotifier<AsyncValue<void>> {
 
   SubmitTaskNotifier(this._ref) : super(const AsyncData(null));
 
-  Future<void> submit({
+  Future<TaskLogModel> submit({
     required TaskType taskType,
     String? customName,
     required int durationMinutes,
   }) async {
     state = const AsyncLoading();
-    state = await AsyncValue.guard(() async {
-      final log = TaskLogModel.create(
-        uid: '',
-        taskType: taskType,
-        customName: customName,
-        durationMinutes: durationMinutes,
-      );
-      await _ref.read(taskRepositoryProvider).saveLog(log);
-    });
+    final log = TaskLogModel.create(
+      uid: '',
+      taskType: taskType,
+      customName: customName,
+      durationMinutes: durationMinutes,
+    );
+    try {
+      final created = await _ref.read(taskRepositoryProvider).saveLog(log);
+      state = const AsyncData(null);
+      return created;
+    } catch (e, st) {
+      state = AsyncError(e, st);
+      rethrow;
+    }
   }
 
   /// 通过模板 key 提交任务（动态任务列表使用）
-  Future<void> submitByTemplate({
+  Future<TaskLogModel> submitByTemplate({
     required String templateKey,
     required String templateName,
     required int durationMinutes,
   }) async {
     state = const AsyncLoading();
-    state = await AsyncValue.guard(() async {
-      final taskType = TaskTypeExtension.fromString(templateKey);
-      final log = TaskLogModel.create(
-        uid: '',
-        taskType: taskType,
-        customName: templateName,
-        durationMinutes: durationMinutes,
-      );
-      await _ref.read(taskRepositoryProvider).saveLog(log);
-    });
+    final taskType = TaskTypeExtension.fromString(templateKey);
+    final log = TaskLogModel.create(
+      uid: '',
+      taskType: taskType,
+      customName: templateName,
+      durationMinutes: durationMinutes,
+    );
+    try {
+      final created = await _ref.read(taskRepositoryProvider).saveLog(log);
+      state = const AsyncData(null);
+      return created;
+    } catch (e, st) {
+      state = AsyncError(e, st);
+      rethrow;
+    }
   }
 }

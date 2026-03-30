@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -14,6 +12,7 @@ import '../../../models/task_log_model.dart';
 import '../../../models/user_task_model.dart';
 import '../../../providers/task_provider.dart';
 import '../../../providers/user_task_provider.dart';
+import '../../../repositories/task_repository.dart';
 import '../widgets/task_card_widget.dart';
 
 class TasksScreen extends ConsumerStatefulWidget {
@@ -144,15 +143,15 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
     setState(() => _processingTasks.add(userTask.id));
 
     try {
-      String? evidencePath;
+      XFile? evidenceXFile;
       if (evidenceType == 'image') {
-        evidencePath = await _captureImage();
+        evidenceXFile = await _captureImage();
       } else if (evidenceType == 'video') {
-        evidencePath = await _recordVideo();
+        evidenceXFile = await _recordVideo();
       } else {
-        evidencePath = await _recordAudio(userTask.template.name);
+        evidenceXFile = await _recordAudio(userTask.template.name);
       }
-      if (evidencePath == null || evidencePath.isEmpty) {
+      if (evidenceXFile == null) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -165,11 +164,18 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
       }
 
       final tpl = userTask.template;
-      await ref.read(submitTaskProvider.notifier).submitByTemplate(
+      final created = await ref.read(submitTaskProvider.notifier).submitByTemplate(
             templateKey: tpl.key,
             templateName: tpl.name,
             durationMinutes: tpl.isTimeBased ? 15 : 0,
           );
+
+      // 上传媒体证据文件（用 readAsBytes 兼容 Web）
+      final bytes = await evidenceXFile.readAsBytes();
+      final filename = evidenceXFile.name.isNotEmpty
+          ? evidenceXFile.name
+          : 'evidence_${DateTime.now().millisecondsSinceEpoch}';
+      await ref.read(taskRepositoryProvider).uploadEvidence(created.id, bytes, filename);
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -191,7 +197,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
     }
   }
 
-  Future<String?> _captureImage() async {
+  Future<XFile?> _captureImage() async {
     final source = await _pickMediaSource(label: '拍照');
     if (source == null) return null;
 
@@ -208,7 +214,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
       return null;
     }
     if (image == null) return null;
-    if (source == ImageSource.gallery && !_isFromToday(image.path)) {
+    if (source == ImageSource.gallery && !await _isFromToday(image)) {
       if (mounted) {
         await showDialog<void>(
           context: context,
@@ -226,10 +232,10 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
       }
       return null;
     }
-    return image.path;
+    return image;
   }
 
-  Future<String?> _recordVideo() async {
+  Future<XFile?> _recordVideo() async {
     final source = await _pickMediaSource(label: '录像');
     if (source == null) return null;
 
@@ -245,7 +251,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
       return null;
     }
     if (video == null) return null;
-    if (source == ImageSource.gallery && !_isFromToday(video.path)) {
+    if (source == ImageSource.gallery && !await _isFromToday(video)) {
       if (mounted) {
         await showDialog<void>(
           context: context,
@@ -263,7 +269,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
       }
       return null;
     }
-    return video.path;
+    return video;
   }
 
   /// 用 AlertDialog 选择来源（避免 ModalBottomSheet 与原生 picker 的 iOS 视图控制器冲突）
@@ -313,11 +319,11 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
     );
   }
 
-  /// 校验文件修改时间是否为今天（debug 模式跳过）
-  bool _isFromToday(String path) {
-    if (kDebugMode) return true;
+  /// 校验文件修改时间是否为今天（debug / web 模式跳过）
+  Future<bool> _isFromToday(XFile xFile) async {
+    if (kDebugMode || kIsWeb) return true;
     try {
-      final modified = File(path).statSync().modified;
+      final modified = await xFile.lastModified();
       final now = DateTime.now();
       return modified.year == now.year &&
           modified.month == now.month &&
@@ -327,7 +333,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
     }
   }
 
-  Future<String?> _recordAudio(String taskName) async {
+  Future<XFile?> _recordAudio(String taskName) async {
     final recorder = AudioRecorder();
     final hasPermission = await recorder.hasPermission();
     if (!hasPermission) {
@@ -368,9 +374,14 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
               if (isBusy || isRecording) return;
               setState(() => isBusy = true);
               try {
-                final dir = await getTemporaryDirectory();
-                final filePath =
-                    '${dir.path}/task_${DateTime.now().millisecondsSinceEpoch}.m4a';
+                final String filePath;
+                if (kIsWeb) {
+                  filePath = '';
+                } else {
+                  final dir = await getTemporaryDirectory();
+                  filePath =
+                      '${dir.path}/task_${DateTime.now().millisecondsSinceEpoch}.m4a';
+                }
                 await recorder.start(
                   const RecordConfig(
                     encoder: AudioEncoder.aacLc,
@@ -465,7 +476,8 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
     );
 
     await recorder.dispose();
-    return outputPath;
+    if (outputPath == null || outputPath!.isEmpty) return null;
+    return XFile(outputPath!);
   }
 }
 

@@ -110,10 +110,14 @@ class _PetIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 根据成长阶段显示不同大小的 emoji
-    final size = pet.level >= 8 ? 52.0 : (pet.level >= 5 ? 44.0 : 36.0);
+    final size = pet.level >= 8 ? 72.0 : (pet.level >= 5 ? 60.0 : 48.0);
 
-    return Text(pet.species.emoji, style: TextStyle(fontSize: size));
+    return Image.asset(
+      'assets/images/growth/${pet.growthStage}.png',
+      width: size,
+      height: size,
+      fit: BoxFit.contain,
+    );
   }
 }
 

@@ -34,9 +34,9 @@ final authStateNotifierProvider = ChangeNotifierProvider<AuthStateNotifier>(
 );
 
 /// 当前用户 UserModel
-final currentUserProvider = StreamProvider<UserModel?>((ref) {
+final currentUserProvider = FutureProvider<UserModel?>((ref) {
   final isLoggedIn = ref.watch(authStateNotifierProvider).isLoggedIn;
-  if (!isLoggedIn) return Stream.value(null);
+  if (!isLoggedIn) return Future.value(null);
   return ref.watch(userRepositoryProvider).watchUser();
 });
 

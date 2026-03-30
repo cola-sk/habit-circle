@@ -12,11 +12,7 @@ class UserRepository {
   final ApiClient _client;
   UserRepository(this._client);
 
-  Stream<UserModel?> watchUser() async* {
-    yield await _fetchUser();
-    yield* Stream.periodic(const Duration(seconds: 30))
-        .asyncMap((_) => _fetchUser());
-  }
+  Future<UserModel?> watchUser() => _fetchUser();
 
   Future<UserModel?> _fetchUser() async {
     try {

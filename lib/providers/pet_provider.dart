@@ -5,18 +5,18 @@ import '../repositories/pet_repository.dart';
 import '../providers/circle_provider.dart';
 import '../providers/auth_provider.dart';
 
-/// 当前用户的宠物（轮询流）
-final myPetProvider = StreamProvider<PetModel?>((ref) {
+/// 当前用户的宠物
+final myPetProvider = FutureProvider<PetModel?>((ref) {
   final isLoggedIn = ref.watch(authStateNotifierProvider).isLoggedIn;
-  if (!isLoggedIn) return Stream.value(null);
-  return ref.watch(petRepositoryProvider).watchPet();
+  if (!isLoggedIn) return Future.value(null);
+  return ref.watch(petRepositoryProvider).fetchMyPet();
 });
 
-/// 圈子内所有宠物（通过圈子 ID 轮询）
-final circlePetsProvider = StreamProvider<List<PetModel>>((ref) {
+/// 圈子内所有宠物
+final circlePetsProvider = FutureProvider<List<PetModel>>((ref) {
   final circle = ref.watch(myCircleProvider).valueOrNull;
-  if (circle == null) return Stream.value([]);
-  return ref.watch(petRepositoryProvider).watchCirclePets(circle.id);
+  if (circle == null) return Future.value([]);
+  return ref.watch(petRepositoryProvider).fetchCirclePets(circle.id);
 });
 
 /// 喂食操作

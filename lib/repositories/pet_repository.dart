@@ -13,12 +13,7 @@ class PetRepository {
   final ApiClient _client;
   PetRepository(this._client);
 
-  /// 轮询流：立即发射一次，之后每 15 秒刷新
-  Stream<PetModel?> watchPet() async* {
-    yield await _fetchMyPet();
-    yield* Stream.periodic(const Duration(seconds: 15))
-        .asyncMap((_) => _fetchMyPet());
-  }
+  Future<PetModel?> fetchMyPet() => _fetchMyPet();
 
   Future<PetModel?> _fetchMyPet() async {
     try {
@@ -44,12 +39,8 @@ class PetRepository {
     await _client.post(ApiEndpoints.feedPet, body: {'points': points});
   }
 
-  /// 轮询流：立即发射一次，之后每 15 秒刷新圈子内所有宠物
-  Stream<List<PetModel>> watchCirclePets(String circleId) async* {
-    yield await _fetchCirclePets(circleId);
-    yield* Stream.periodic(const Duration(seconds: 15))
-        .asyncMap((_) => _fetchCirclePets(circleId));
-  }
+  Future<List<PetModel>> fetchCirclePets(String circleId) =>
+      _fetchCirclePets(circleId);
 
   Future<List<PetModel>> _fetchCirclePets(String circleId) async {
     try {

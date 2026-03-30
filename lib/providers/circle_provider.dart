@@ -4,12 +4,12 @@ import '../models/circle_model.dart';
 import '../repositories/circle_repository.dart';
 import 'auth_provider.dart';
 
-/// 当前用户所在圈子（实时流）
-final myCircleProvider = StreamProvider<CircleModel?>((ref) {
+/// 当前用户所在圈子
+final myCircleProvider = FutureProvider<CircleModel?>((ref) {
   final user = ref.watch(currentUserProvider).valueOrNull;
   final circleId = user?.circleId;
-  if (circleId == null) return Stream.value(null);
-  return ref.watch(circleRepositoryProvider).watchCircle(circleId);
+  if (circleId == null) return Future.value(null);
+  return ref.watch(circleRepositoryProvider).fetchCircle(circleId);
 });
 
 /// 创建/加入圈子操作

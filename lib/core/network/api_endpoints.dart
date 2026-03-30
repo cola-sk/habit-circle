@@ -22,6 +22,8 @@ class ApiEndpoints {
 
   // Tasks
   static const tasks = '/api/tasks';
+  static String taskEvidence(String taskId) => '/api/tasks/$taskId/evidence';
+  static String taskConfirm(String taskId)  => '/api/tasks/$taskId/confirm';
 
   // Circles
   static const circles     = '/api/circles';

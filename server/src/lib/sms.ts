@@ -9,18 +9,16 @@
  */
 
 export async function sendSms(phone: string, code: string): Promise<void> {
-  const isDev =
-    !process.env.ALIYUN_ACCESS_KEY_ID ||
-    process.env.NODE_ENV === "development";
+  const hasAliyunKey = !!process.env.ALIYUN_ACCESS_KEY_ID;
 
-  if (isDev) {
-    // 开发模式：打印到终端，不实际发送
-    console.log(`\n📱 [DEV SMS] 手机号: ${phone}  验证码: ${code}\n`);
+  if (!hasAliyunKey) {
+    // 未配置短信服务时：打印到日志（开发环境 / 暂未接入短信的生产环境均适用）
+    console.log(`\n📱 [SMS] 手机号: ${phone}  验证码: ${code}\n`);
     return;
   }
 
-  // ── 生产模式：阿里云短信 ──────────────────────────────────────
-  // 安装 SDK: npm install @alicloud/dysmsapi20170525 @alicloud/openapi-client
+  // ── 阿里云短信（待接入）──────────────────────────────────────
+  // 安装 SDK: pnpm add @alicloud/dysmsapi20170525 @alicloud/openapi-client
   //
   // import Dysmsapi from '@alicloud/dysmsapi20170525';
   // import OpenApi from '@alicloud/openapi-client';

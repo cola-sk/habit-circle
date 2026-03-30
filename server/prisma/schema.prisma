@@ -6,8 +6,9 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 // ── 用户 ───────────────────────────────────────────────────────
@@ -56,6 +57,10 @@ model TaskLog {
   points          Int
   completed       Boolean  @default(true)
   date            String   // YYYY-MM-DD，方便按天聚合
+
+  evidenceUrl     String?  // Vercel Blob URL（图片或音频）
+  evidenceType    String?  // "image" | "audio"
+  confirmed       Boolean  @default(false) // 家长是否已确认
 
   createdAt       DateTime @default(now())
 

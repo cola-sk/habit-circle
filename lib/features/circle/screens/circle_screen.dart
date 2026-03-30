@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/widgets/app_top_bar.dart';
@@ -192,7 +193,7 @@ class _InviteBanner extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               GestureDetector(
-                onTap: () {/* TODO: 邀请家人 */},
+                onTap: () => context.push('/circle/invite'),
                 child: Container(
                   padding: const EdgeInsets.symmetric(
                       horizontal: 20, vertical: 12),
@@ -418,18 +419,19 @@ class _PetGrid extends StatelessWidget {
         crossAxisCount: 2,
         crossAxisSpacing: 16,
         mainAxisSpacing: 24,
-        childAspectRatio: 0.78,
+        childAspectRatio: 0.76,
       ),
       itemCount: pets.length,
       itemBuilder: (context, index) {
         final pet = pets[index];
         final isMe = pet.ownerId == currentUid;
-        // 取名字首字作为头像
-        final initial =
-            pet.name.isNotEmpty ? pet.name[0] : '?';
+        // ownerName 首字做头像；无 ownerName 时降级到宠物名首字
+        final displayName = pet.ownerName.isNotEmpty ? pet.ownerName : pet.name;
+        final initial = displayName.isNotEmpty ? displayName[0] : '?';
         return PlazaPetCard(
           pet: pet,
           ownerInitial: initial,
+          ownerName: pet.ownerName,
           isMe: isMe,
           onCheer: isMe ? null : () {/* TODO: 加油功能 */},
         );

@@ -14,6 +14,7 @@ import '../../features/tasks/screens/tasks_screen.dart';
 import '../../features/circle/screens/circle_screen.dart';
 import '../../features/growth/screens/growth_details_screen.dart';
 import '../../features/profile/screens/profile_screen.dart';
+import '../../features/circle/screens/invite_family_screen.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   // ref.read（不是 watch），路由器只创建一次，不随状态变化重建
@@ -77,6 +78,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/circle',
             builder: (_, __) => const CircleScreen(),
+            routes: [
+              GoRoute(
+                path: 'invite',
+                builder: (_, __) => const InviteFamilyScreen(),
+              ),
+            ],
           ),
           GoRoute(
             path: '/profile',

@@ -47,9 +47,14 @@ class PetRepository {
       final data = await _client.get(ApiEndpoints.circleById(circleId));
       final members = data['members'] as List<dynamic>;
       return members
-          .map((m) => m['pet'])
           .whereType<Map<String, dynamic>>()
-          .map(PetModel.fromJson)
+          .where((m) => m['pet'] != null)
+          .map((m) {
+            final petJson = Map<String, dynamic>.from(
+                m['pet'] as Map<String, dynamic>);
+            petJson['ownerName'] = m['childName'] as String? ?? '';
+            return PetModel.fromJson(petJson);
+          })
           .toList();
     } on ApiException {
       return [];

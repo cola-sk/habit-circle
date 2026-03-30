@@ -44,6 +44,7 @@ class SubmitTaskNotifier extends StateNotifier<AsyncValue<void>> {
     try {
       final created = await _ref.read(taskRepositoryProvider).saveLog(log);
       state = const AsyncData(null);
+      _ref.invalidate(todayTaskLogsProvider);
       return created;
     } catch (e, st) {
       state = AsyncError(e, st);
@@ -68,6 +69,7 @@ class SubmitTaskNotifier extends StateNotifier<AsyncValue<void>> {
     try {
       final created = await _ref.read(taskRepositoryProvider).saveLog(log);
       state = const AsyncData(null);
+      _ref.invalidate(todayTaskLogsProvider);
       return created;
     } catch (e, st) {
       state = AsyncError(e, st);

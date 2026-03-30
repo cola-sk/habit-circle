@@ -14,6 +14,9 @@ class PlazaPetCard extends StatelessWidget {
   /// 显示在卡片左上角的头像首字
   final String ownerInitial;
 
+  /// 孩子昵称（非 me 时显示在卡片名字行）
+  final String ownerName;
+
   /// 点击加油回调（isMe=false 时有效）
   final VoidCallback? onCheer;
 
@@ -21,6 +24,7 @@ class PlazaPetCard extends StatelessWidget {
     super.key,
     required this.pet,
     required this.ownerInitial,
+    this.ownerName = '',
     this.isMe = false,
     this.onCheer,
   });
@@ -48,18 +52,20 @@ class PlazaPetCard extends StatelessWidget {
         clipBehavior: Clip.none,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 28, 16, 16),
+            padding: const EdgeInsets.fromLTRB(12, 24, 12, 12),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 // 宠物图标
                 _PetIcon(pet: pet),
 
-                const SizedBox(height: 10),
+                const SizedBox(height: 8),
 
-                // 名字
+                // 名字：自己显示“我”，他人显示孩子昵称（无昵称降级到宠物名）
                 Text(
-                  isMe ? '我 (Lv.${pet.level})' : pet.name,
+                  isMe
+                      ? '我 (Lv.${pet.level})'
+                      : '${ownerName.isNotEmpty ? ownerName : pet.name} (Lv.${pet.level})',
                   style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w900,
@@ -69,7 +75,7 @@ class PlazaPetCard extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
 
-                const SizedBox(height: 6),
+                const SizedBox(height: 4),
 
                 // 状态徽章
                 _StageBadge(
@@ -78,7 +84,7 @@ class PlazaPetCard extends StatelessWidget {
                   status: pet.hungerStatus,
                 ),
 
-                const SizedBox(height: 12),
+                const SizedBox(height: 8),
 
                 // 自己：进度条 / 他人：加油按钮
                 if (isMe)
@@ -110,7 +116,7 @@ class _PetIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final size = pet.level >= 8 ? 72.0 : (pet.level >= 5 ? 60.0 : 48.0);
+    final size = pet.level >= 8 ? 96.0 : (pet.level >= 5 ? 84.0 : 72.0);
 
     return Image.asset(
       'assets/images/growth/${pet.growthStage}.png',
@@ -208,7 +214,7 @@ class _CheerButton extends StatelessWidget {
       onTap: onTap,
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 10),
+        padding: const EdgeInsets.symmetric(vertical: 7),
         decoration: BoxDecoration(
           gradient: const LinearGradient(
             begin: Alignment.topCenter,

@@ -2,6 +2,7 @@ import '../core/constants/pet_species.dart';
 
 class PetModel {
   final String ownerId;
+  final String ownerName; // 孩子昵称，圈子广场用于区分是谁的西瓜
   final String name;
   final PetSpecies species;
   final int level;
@@ -12,6 +13,7 @@ class PetModel {
 
   const PetModel({
     required this.ownerId,
+    this.ownerName = '',
     required this.name,
     required this.species,
     required this.level,
@@ -23,6 +25,7 @@ class PetModel {
 
   factory PetModel.fromJson(Map<String, dynamic> data) => PetModel(
         ownerId: data['ownerId'] as String? ?? '',
+        ownerName: data['ownerName'] as String? ?? '',
         name: data['name'] as String? ?? '我的宠物',
         species:
             PetSpeciesExtension.fromString(data['species'] as String? ?? 'cat'),
@@ -60,6 +63,7 @@ class PetModel {
   }
 
   PetModel copyWith({
+    String? ownerName,
     String? name,
     int? level,
     int? totalPoints,
@@ -68,6 +72,7 @@ class PetModel {
   }) =>
       PetModel(
         ownerId: ownerId,
+        ownerName: ownerName ?? this.ownerName,
         name: name ?? this.name,
         species: species,
         level: level ?? this.level,

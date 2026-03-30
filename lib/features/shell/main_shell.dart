@@ -75,52 +75,6 @@ class _WatermelonNavBar extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: List.generate(tabs.length, (i) {
-              // 广场（index 2）居中凸起样式
-              if (i == 2) {
-                return GestureDetector(
-                  onTap: () => onTap(i),
-                  child: Transform.translate(
-                    offset: const Offset(0, -18),
-                    child: Container(
-                      width: 64,
-                      height: 64,
-                      decoration: BoxDecoration(
-                        color: activeIndex == i
-                            ? AppColors.primary
-                            : AppColors.secondary,
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: [
-                          BoxShadow(
-                            color: (activeIndex == i
-                                    ? AppColors.primary
-                                    : AppColors.secondary)
-                                .withValues(alpha: 0.5),
-                            blurRadius: 0,
-                            offset: const Offset(0, 5),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(tabs[i].icon, color: Colors.white, size: 28),
-                          const SizedBox(height: 2),
-                          Text(
-                            tabs[i].label,
-                            style: const TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w900,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                );
-              }
-
-              // 普通 Tab
               final isActive = activeIndex == i;
               return GestureDetector(
                 onTap: () => onTap(i),
@@ -130,21 +84,33 @@ class _WatermelonNavBar extends StatelessWidget {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(
-                        tabs[i].icon,
-                        size: 26,
-                        color: isActive
-                            ? AppColors.secondary
-                            : AppColors.textSecondary,
+                      // 选中时加一个圆角背景底
+                      AnimatedContainer(
+                        duration: const Duration(milliseconds: 180),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: isActive
+                              ? AppColors.primary.withValues(alpha: 0.12)
+                              : Colors.transparent,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(
+                          tabs[i].icon,
+                          size: 26,
+                          color: isActive
+                              ? AppColors.primary
+                              : AppColors.textSecondary,
+                        ),
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 2),
                       Text(
                         tabs[i].label,
                         style: TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.w900,
                           color: isActive
-                              ? AppColors.secondary
+                              ? AppColors.primary
                               : AppColors.textSecondary,
                         ),
                       ),

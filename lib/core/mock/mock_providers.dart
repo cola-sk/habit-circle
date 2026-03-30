@@ -53,6 +53,7 @@ final _mockCirclePets = [
   _mockPet,
   PetModel(
     ownerId: 'mock-uid-002',
+    ownerName: '小红',
     name: 'Oliver',
     species: PetSpecies.rabbit,
     totalPoints: 1200,
@@ -63,6 +64,7 @@ final _mockCirclePets = [
   ),
   PetModel(
     ownerId: 'mock-uid-003',
+    ownerName: '小华',
     name: 'Sophia',
     species: PetSpecies.hamster,
     totalPoints: 380,
@@ -73,6 +75,7 @@ final _mockCirclePets = [
   ),
   PetModel(
     ownerId: 'mock-uid-004',
+    ownerName: '小刚',
     name: 'Leo',
     species: PetSpecies.dog,
     totalPoints: 820,

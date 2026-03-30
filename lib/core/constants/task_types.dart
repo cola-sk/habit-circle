@@ -1,49 +1,87 @@
 /// 任务类型枚举
 enum TaskType {
-  reading,   // 自主阅读
-  piano,     // 练琴
-  english,   // 英语绘本
-  preview,   // 课程预习
-  homework,  // 完成作业
-  exercise,  // 户外运动
-  custom,    // 自定义任务
+  reading, // 自主阅读
+  piano, // 练琴
+  english, // 英语绘本
+  preview, // 课程预习
+  homework, // 完成作业
+  exercise, // 户外运动
+  custom, // 自定义任务
+}
+
+/// 任务证据类型
+enum TaskEvidenceType {
+  image, // 图片收集
+  audio, // 语音收集
+}
+
+extension TaskEvidenceTypeExtension on TaskEvidenceType {
+  String get displayName {
+    switch (this) {
+      case TaskEvidenceType.image:
+        return '图片收集';
+      case TaskEvidenceType.audio:
+        return '语音收集';
+    }
+  }
 }
 
 extension TaskTypeExtension on TaskType {
   String get displayName {
     switch (this) {
-      case TaskType.reading:  return '自主阅读';
-      case TaskType.piano:    return '练琴';
-      case TaskType.english:  return '英语绘本';
-      case TaskType.preview:  return '课程预习';
-      case TaskType.homework: return '完成作业';
-      case TaskType.exercise: return '户外运动';
-      case TaskType.custom:   return '自定义任务';
+      case TaskType.reading:
+        return '自主阅读';
+      case TaskType.piano:
+        return '练琴';
+      case TaskType.english:
+        return '英语绘本';
+      case TaskType.preview:
+        return '课程预习';
+      case TaskType.homework:
+        return '完成作业';
+      case TaskType.exercise:
+        return '户外运动';
+      case TaskType.custom:
+        return '自定义任务';
     }
   }
 
   String get emoji {
     switch (this) {
-      case TaskType.reading:  return '📚';
-      case TaskType.piano:    return '🎹';
-      case TaskType.english:  return '🌍';
-      case TaskType.preview:  return '📖';
-      case TaskType.homework: return '✏️';
-      case TaskType.exercise: return '⚽';
-      case TaskType.custom:   return '⭐';
+      case TaskType.reading:
+        return '📚';
+      case TaskType.piano:
+        return '🎹';
+      case TaskType.english:
+        return '🌍';
+      case TaskType.preview:
+        return '📖';
+      case TaskType.homework:
+        return '✏️';
+      case TaskType.exercise:
+        return '⚽';
+      case TaskType.custom:
+        return '⭐';
     }
   }
 
   /// 每 15 分钟的基础积分（homework 是固定值）
   int get pointsPer15Min {
     switch (this) {
-      case TaskType.reading:  return 10;
-      case TaskType.piano:    return 15;
-      case TaskType.english:  return 12;
-      case TaskType.preview:  return 10;
-      case TaskType.homework: return 20; // 固定积分
-      case TaskType.exercise: return 8;
-      case TaskType.custom:   return 10;
+      case TaskType.reading:
+        return 10;
+      case TaskType.piano:
+        return 15;
+      case TaskType.english:
+        return 12;
+      case TaskType.preview:
+        return 10;
+      case TaskType.homework:
+        return 20; // 固定积分
+      case TaskType.exercise:
+        return 8;
+      case TaskType.custom:
+        return 10;
     }
   }
 
@@ -54,14 +92,46 @@ extension TaskTypeExtension on TaskType {
 
   String get colorHex {
     switch (this) {
-      case TaskType.reading:  return '#4FC3F7';
-      case TaskType.piano:    return '#CE93D8';
-      case TaskType.english:  return '#80CBC4';
-      case TaskType.preview:  return '#A5D6A7';
-      case TaskType.homework: return '#FFCC80';
-      case TaskType.exercise: return '#EF9A9A';
-      case TaskType.custom:   return '#B0BEC5';
+      case TaskType.reading:
+        return '#4FC3F7';
+      case TaskType.piano:
+        return '#CE93D8';
+      case TaskType.english:
+        return '#80CBC4';
+      case TaskType.preview:
+        return '#A5D6A7';
+      case TaskType.homework:
+        return '#FFCC80';
+      case TaskType.exercise:
+        return '#EF9A9A';
+      case TaskType.custom:
+        return '#B0BEC5';
     }
+  }
+
+  /// 任务提交证据类型：由家长拍照/录音提交
+  TaskEvidenceType get evidenceType {
+    switch (this) {
+      case TaskType.reading:
+      case TaskType.piano:
+      case TaskType.english:
+        return TaskEvidenceType.audio;
+      case TaskType.preview:
+      case TaskType.homework:
+      case TaskType.exercise:
+      case TaskType.custom:
+        return TaskEvidenceType.image;
+    }
+  }
+
+  /// 任务卡片动作文案
+  String get submitActionLabel {
+    return evidenceType == TaskEvidenceType.image ? '拍照上传' : '录音上传';
+  }
+
+  /// 证据模式下默认提交时长（用于沿用既有积分规则）
+  int get evidenceSubmitMinutes {
+    return isTimeBased ? 15 : 0;
   }
 
   static TaskType fromString(String value) {

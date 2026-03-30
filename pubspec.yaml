@@ -37,6 +37,9 @@ dependencies:
   lottie: ^3.1.2               # Lottie 动画（备用）
   gap: ^3.0.1                  # 间距工具
   collection: ^1.18.0
+  image_picker: ^1.1.2         # 拍照上传任务证据
+  record: ^6.2.0               # 录音上传任务证据
+  path_provider: ^2.1.4        # 临时文件目录
 
 dev_dependencies:
   flutter_test:

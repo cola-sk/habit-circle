@@ -11,6 +11,7 @@ const schema = z.object({
 
 export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => null);
+  console.log("[verify-code] body:", JSON.stringify(body));
   const parsed = schema.safeParse(body);
   if (!parsed.success) return fail("参数错误");
 
@@ -35,12 +36,24 @@ export async function POST(req: NextRequest) {
     data: { used: true },
   });
 
-  // 查找或创建用户
+  // 查找或创建用户，同时确保西瓜存在（新用户自动种下一颗种子）
   const user = await prisma.user.upsert({
     where: { phone },
     update: {},
     create: { phone },
   });
+
+  // 新用户自动创建西瓜（种子阶段），无需手动选择
+  const existingPet = await prisma.pet.findUnique({ where: { ownerId: user.id } });
+  if (!existingPet) {
+    await prisma.pet.create({
+      data: {
+        ownerId: user.id,
+        name: '我的西瓜',
+        species: 'watermelon',
+      },
+    });
+  }
 
   const token = await signToken({ userId: user.id });
 

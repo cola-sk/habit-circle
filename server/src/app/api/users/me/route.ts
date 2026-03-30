@@ -10,7 +10,7 @@ export async function GET(req: NextRequest) {
   if (!userId) return unauthorized();
 
   const user = await prisma.user.findUnique({ where: { id: userId } });
-  if (!user) return fail("用户不存在", 404);
+  if (!user) return unauthorized();
 
   return ok({
     id: user.id,

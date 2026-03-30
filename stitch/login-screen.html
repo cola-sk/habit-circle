@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Grow Watermelon - Login</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&amp;family=Be+Vietnam+Pro:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "secondary-dim": "#005d16",
+              "on-tertiary-container": "#5c4900",
+              "primary-fixed-dim": "#ff5a59",
+              "tertiary": "#705900",
+              "tertiary-container": "#fdd34d",
+              "secondary-container": "#91f78e",
+              "surface-tint": "#b21d27",
+              "on-secondary-fixed": "#00480f",
+              "secondary": "#006b1b",
+              "surface-dim": "#c8d7df",
+              "surface-container-high": "#d8e4ec",
+              "error-container": "#f95630",
+              "primary": "#b21d27",
+              "on-tertiary-fixed-variant": "#675200",
+              "inverse-surface": "#070f13",
+              "surface-container-low": "#e8f2f9",
+              "on-secondary-container": "#005e17",
+              "on-primary": "#ffefee",
+              "inverse-on-surface": "#959ea4",
+              "surface-bright": "#eff8fe",
+              "surface-container": "#dfeaf1",
+              "primary-container": "#ff7671",
+              "primary-fixed": "#ff7671",
+              "outline": "#6f787d",
+              "surface-container-lowest": "#ffffff",
+              "inverse-primary": "#fd5556",
+              "tertiary-fixed": "#fdd34d",
+              "background": "#eff8fe",
+              "secondary-fixed": "#91f78e",
+              "on-primary-fixed-variant": "#60000b",
+              "on-secondary": "#d1ffc8",
+              "outline-variant": "#a5aeb4",
+              "on-primary-container": "#4e0007",
+              "surface-container-highest": "#d1dfe7",
+              "secondary-fixed-dim": "#83e881",
+              "on-tertiary-fixed": "#463600",
+              "error": "#b02500",
+              "surface": "#eff8fe",
+              "on-surface": "#273034",
+              "tertiary-dim": "#624d00",
+              "on-primary-fixed": "#000000",
+              "error-dim": "#b92902",
+              "on-background": "#273034",
+              "on-surface-variant": "#545d62",
+              "on-secondary-fixed-variant": "#00691a",
+              "surface-variant": "#d1dfe7",
+              "on-tertiary": "#fff2d4",
+              "on-error": "#ffefec",
+              "on-error-container": "#520c00",
+              "tertiary-fixed-dim": "#eec540",
+              "primary-dim": "#a10c1d"
+            },
+            fontFamily: {
+              "headline": ["Plus Jakarta Sans"],
+              "body": ["Be Vietnam Pro"],
+              "label": ["Plus Jakarta Sans"]
+            },
+            borderRadius: {"DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+      .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      }
+      .watermelon-glow {
+        box-shadow: 0 24px 48px -12px rgba(178, 29, 39, 0.15);
+      }
+      .bg-mesh {
+        background-color: #eff8fe;
+        background-image: 
+          radial-gradient(at 0% 0%, rgba(253, 211, 77, 0.15) 0px, transparent 50%),
+          radial-gradient(at 100% 0%, rgba(145, 247, 142, 0.15) 0px, transparent 50%),
+          radial-gradient(at 100% 100%, rgba(255, 118, 113, 0.1) 0px, transparent 50%);
+      }
+      .inner-glow {
+        box-shadow: inset 0 2px 4px rgba(255, 255, 255, 0.3);
+      }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-mesh font-body text-on-surface min-h-screen flex flex-col overflow-hidden">
+<!-- Top Navigation Anchor (Shared Component Logic - Suppressed for Login) -->
+<header class="w-full top-0 left-0 flex items-center justify-between px-6 py-6 z-10">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-3xl" data-icon="potted_plant">potted_plant</span>
+<h1 class="font-headline font-extrabold tracking-tight text-2xl text-primary">Grow Watermelon</h1>
+</div>
+</header>
+<main class="flex-1 flex flex-col items-center justify-center px-8 relative">
+<!-- Decorative 3D elements in background -->
+<div class="absolute top-20 left-10 opacity-20 rotate-12 scale-150">
+<span class="material-symbols-outlined text-secondary text-6xl" data-icon="energy_savings_leaf">energy_savings_leaf</span>
+</div>
+<div class="absolute bottom-40 right-10 opacity-20 -rotate-12 scale-125">
+<span class="material-symbols-outlined text-primary text-4xl" data-icon="water_drop">water_drop</span>
+</div>
+<!-- Central Mascot Section -->
+<div class="relative mb-12 group">
+<div class="absolute inset-0 bg-primary/10 blur-3xl rounded-full scale-150"></div>
+<div class="relative w-64 h-64 md:w-80 md:h-80 flex items-center justify-center">
+<img alt="3D Watermelon Character" class="w-full h-full object-contain drop-shadow-2xl hover:scale-105 transition-transform duration-500 ease-out" data-alt="A cute 3D rendered watermelon character with large friendly eyes and a happy smile, vibrant red flesh and green rind, sitting in a soft sunlit garden." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCK6kDkRxuCJ2lEZdyvGFYlRgvt30DtwI5sQThYDl6jD65Fep-Pb5cUEPcwsT_iDnB5s0HOhfrdZwAWTxxSQm_JHj3HWO9aQQWX-b8Go1m56MNKKbcouNITCcgdLGxcAkBDtSoZibPF49KbSqw7JwPMG9-A9EW8bB4P3QyUfIEQ82NctX00qJTXG-kJ0kVWhsG5lFUwmtxfV_7Sj8xRTcFvtSArq5F9U-YJuvQ18yWjWirXu90RCkBBn4Kjd0PEd4K-uJUKDCgf0wA"/>
+</div>
+</div>
+<!-- Branding & Slogan -->
+<div class="text-center mb-10 space-y-2">
+<h2 class="font-headline text-5xl md:text-6xl font-black text-primary tracking-tighter">养西瓜</h2>
+<p class="font-headline text-lg md:text-xl font-bold text-on-surface-variant tracking-wide">陪伴孩子养成好习惯</p>
+</div>
+<!-- Interactive Actions -->
+<div class="w-full max-w-sm space-y-4">
+<!-- Primary Action: Phone Login -->
+<button class="w-full bg-gradient-to-br from-primary to-primary-container text-on-primary font-headline font-bold text-lg py-5 px-8 rounded-full watermelon-glow inner-glow flex items-center justify-center gap-3 active:scale-95 transition-all duration-150">
+<span class="material-symbols-outlined" data-icon="smartphone">smartphone</span>
+                手机号登录
+            </button>
+<!-- Secondary Action: Scan Circle -->
+<button class="w-full bg-surface-container-lowest text-secondary font-headline font-bold text-lg py-5 px-8 rounded-full border-2 border-secondary-container/30 flex items-center justify-center gap-3 hover:bg-secondary-container/10 active:scale-95 transition-all duration-150">
+<span class="material-symbols-outlined" data-icon="qr_code_scanner">qr_code_scanner</span>
+                扫码加入圈子
+            </button>
+</div>
+<!-- Social/Quick Auth Grid (Asymmetric Layout Hint) -->
+<div class="mt-12 flex items-center gap-8">
+<div class="w-12 h-12 rounded-full bg-white flex items-center justify-center text-slate-400 hover:text-[#07C160] transition-colors cursor-pointer shadow-sm">
+<span class="material-symbols-outlined" data-icon="chat">chat</span>
+</div>
+<div class="w-12 h-12 rounded-full bg-white flex items-center justify-center text-slate-400 hover:text-primary transition-colors cursor-pointer shadow-sm">
+<span class="material-symbols-outlined" data-icon="brand_awareness">brand_awareness</span>
+</div>
+</div>
+</main>
+<!-- Footer Links (The "Safe Zone") -->
+<footer class="w-full py-10 px-6 text-center">
+<div class="flex items-center justify-center gap-4 text-sm font-medium text-outline">
+<a class="hover:text-primary transition-colors" href="#">用户协议</a>
+<span class="w-1 h-1 rounded-full bg-outline-variant"></span>
+<a class="hover:text-primary transition-colors" href="#">隐私政策</a>
+</div>
+<div class="mt-4 flex justify-center items-center gap-2 text-xs text-outline-variant/60">
+<span class="material-symbols-outlined text-xs" data-icon="verified_user">verified_user</span>
+<span>已通过安全认证</span>
+</div>
+</footer>
+<!-- Bottom Navigation Suppressed for Login Intent -->
+</body></html>

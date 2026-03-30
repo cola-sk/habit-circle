@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../providers/auth_provider.dart';
+import '../../core/network/api_client.dart';
 import '../../features/onboarding/screens/welcome_screen.dart';
 import '../../features/onboarding/screens/phone_auth_screen.dart';
 import '../../features/onboarding/screens/create_profile_screen.dart';
@@ -15,20 +16,24 @@ import '../../features/growth/screens/growth_details_screen.dart';
 import '../../features/profile/screens/profile_screen.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
-  // 监听 auth 状态，做路由重定向
-  ref.watch(isLoggedInProvider);
-  ref.watch(currentUserProvider);
+  // ref.read（不是 watch），路由器只创建一次，不随状态变化重建
+  final authNotifier = ref.read(authStateNotifierProvider);
 
-  return GoRouter(
-    initialLocation: '/home',
+  final router = GoRouter(
+    initialLocation: authNotifier.isLoggedIn ? '/home' : '/circle',
+    // 登录状态变化时，GoRouter 自动重新评估 redirect（不重建路由器）
+    refreshListenable: authNotifier,
     redirect: (context, state) {
-      // TODO: 恢复登录校验
-      // final isLoggedIn = authState.valueOrNull == true;
-      // if (!isLoggedIn) {
-      //   if (state.matchedLocation.startsWith('/onboarding')) return null;
-      //   return '/onboarding/welcome';
-      // }
-      return null;
+      final loggedIn = authNotifier.isLoggedIn;
+      final loc = state.matchedLocation;
+
+      // 已登录：放行所有路由
+      if (loggedIn) return null;
+
+      // 未登录：onboarding 路由放行，圈子广场放行
+      if (loc.startsWith('/onboarding') || loc == '/circle') return null;
+      // home/tasks/profile 跳登录页
+      return '/onboarding/auth';
     },
     routes: [
       // ── Onboarding ───────────────────────────────────────────────────────
@@ -87,4 +92,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
     ],
   );
+
+  // 监听 401 事件：清除登录态（refreshListenable 会触发 redirect 自动跳走）
+  ref.listen(unauthenticatedEventProvider, (_, next) {
+    if (next.hasValue) {
+      authNotifier.logout();
+      router.go('/circle');
+    }
+  });
+
+  return router;
 });

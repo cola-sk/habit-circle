@@ -32,5 +32,10 @@ export async function POST(req: NextRequest) {
   await prisma.smsCode.create({ data: { phone, code, expiresAt } });
   await sendSms(phone, code);
 
-  return ok({ message: "验证码已发送" });
+  // 未配置短信服务时，把验证码明文返回，方便开发调试
+  const isSmsMocked = !process.env.ALIYUN_ACCESS_KEY_ID;
+  return ok({
+    message: "验证码已发送",
+    ...(isSmsMocked && { code }),
+  });
 }

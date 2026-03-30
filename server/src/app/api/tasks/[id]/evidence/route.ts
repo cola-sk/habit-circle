@@ -18,12 +18,12 @@ const ALLOWED_TYPES: Record<string, string> = {
 // POST /api/tasks/:id/evidence — 上传任务证明（图片或音频）
 export async function POST(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  context: RouteContext<"/api/tasks/[id]/evidence">
 ) {
   const userId = await getAuthUser(req);
   if (!userId) return unauthorized();
 
-  const { id: taskId } = await params;
+  const { id: taskId } = await context.params;
 
   // 确认该任务属于当前用户
   const taskLog = await prisma.taskLog.findUnique({ where: { id: taskId } });

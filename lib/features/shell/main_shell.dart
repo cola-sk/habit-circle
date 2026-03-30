@@ -1,22 +1,25 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/constants/app_colors.dart';
+import '../../providers/auth_provider.dart';
 
-class MainShell extends StatelessWidget {
+class MainShell extends ConsumerWidget {
   final Widget child;
 
   const MainShell({super.key, required this.child});
 
   static const _tabs = [
-    (path: '/home',    label: '首页',  icon: Icons.home_rounded),
-    (path: '/tasks',   label: '任务',  icon: Icons.task_alt_rounded),
-    (path: '/circle',  label: '广场',  icon: Icons.grid_view_rounded),
-    (path: '/profile', label: '家长',  icon: Icons.child_care_rounded),
+    (path: '/home',    label: '首页',  icon: Icons.home_rounded,         requiresAuth: true),
+    (path: '/tasks',   label: '任务',  icon: Icons.task_alt_rounded,     requiresAuth: true),
+    (path: '/circle',  label: '广场',  icon: Icons.grid_view_rounded,    requiresAuth: false),
+    (path: '/profile', label: '家长',  icon: Icons.child_care_rounded,   requiresAuth: true),
   ];
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isLoggedIn = ref.watch(authStateNotifierProvider).isLoggedIn;
     final location = GoRouterState.of(context).matchedLocation;
     final currentIndex = _tabs.indexWhere((t) => location.startsWith(t.path));
     final activeIndex = currentIndex < 0 ? 0 : currentIndex;
@@ -25,7 +28,14 @@ class MainShell extends StatelessWidget {
       body: child,
       bottomNavigationBar: _WatermelonNavBar(
         activeIndex: activeIndex,
-        onTap: (i) => context.go(_tabs[i].path),
+        onTap: (i) {
+          final tab = _tabs[i];
+          if (tab.requiresAuth && !isLoggedIn) {
+            context.go('/onboarding/auth');
+          } else {
+            context.go(tab.path);
+          }
+        },
         tabs: _tabs,
       ),
     );
@@ -35,7 +45,7 @@ class MainShell extends StatelessWidget {
 class _WatermelonNavBar extends StatelessWidget {
   final int activeIndex;
   final ValueChanged<int> onTap;
-  final List<({String path, String label, IconData icon})> tabs;
+  final List<({String path, String label, IconData icon, bool requiresAuth})> tabs;
 
   const _WatermelonNavBar({
     required this.activeIndex,

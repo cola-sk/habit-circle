@@ -12,11 +12,12 @@ class CircleRepository {
   final ApiClient _client;
   CircleRepository(this._client);
 
-  /// 轮询流：每 15 秒刷新圈子信息
-  Stream<CircleModel?> watchCircle(String circleId) => Stream.periodic(
-        const Duration(seconds: 15),
-        (_) => _fetchCircle(circleId),
-      ).asyncMap((f) => f).asBroadcastStream();
+  /// 轮询流：立即发射一次，之后每 15 秒刷新圈子信息
+  Stream<CircleModel?> watchCircle(String circleId) async* {
+    yield await _fetchCircle(circleId);
+    yield* Stream.periodic(const Duration(seconds: 15))
+        .asyncMap((_) => _fetchCircle(circleId));
+  }
 
   Future<CircleModel?> _fetchCircle(String circleId) async {
     try {

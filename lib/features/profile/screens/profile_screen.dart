@@ -180,6 +180,7 @@ class ProfileScreen extends ConsumerWidget {
 
     if (confirmed != true) return;
     await ref.read(authRepositoryProvider).signOut();
+    ref.read(authStateNotifierProvider).logout();
     if (context.mounted) {
       context.go('/onboarding/welcome');
     }

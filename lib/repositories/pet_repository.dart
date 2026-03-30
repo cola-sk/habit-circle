@@ -13,15 +13,17 @@ class PetRepository {
   final ApiClient _client;
   PetRepository(this._client);
 
-  /// 轮询流：每 15 秒刷新一次当前用户宠物
-  Stream<PetModel?> watchPet() => Stream.periodic(
-        const Duration(seconds: 15),
-        (_) => _fetchMyPet(),
-      ).asyncMap((f) => f).asBroadcastStream();
+  /// 轮询流：立即发射一次，之后每 15 秒刷新
+  Stream<PetModel?> watchPet() async* {
+    yield await _fetchMyPet();
+    yield* Stream.periodic(const Duration(seconds: 15))
+        .asyncMap((_) => _fetchMyPet());
+  }
 
   Future<PetModel?> _fetchMyPet() async {
     try {
-      final data = await _client.get(ApiEndpoints.pets);
+      final data = await _client.getNullable(ApiEndpoints.pets);
+      if (data == null) return null;
       return PetModel.fromJson(data);
     } on ApiException {
       return null;
@@ -42,12 +44,12 @@ class PetRepository {
     await _client.post(ApiEndpoints.feedPet, body: {'points': points});
   }
 
-  /// 轮询流：获取圈子内所有宠物（通过圈子详情接口）
-  Stream<List<PetModel>> watchCirclePets(String circleId) =>
-      Stream.periodic(
-        const Duration(seconds: 15),
-        (_) => _fetchCirclePets(circleId),
-      ).asyncMap((f) => f).asBroadcastStream();
+  /// 轮询流：立即发射一次，之后每 15 秒刷新圈子内所有宠物
+  Stream<List<PetModel>> watchCirclePets(String circleId) async* {
+    yield await _fetchCirclePets(circleId);
+    yield* Stream.periodic(const Duration(seconds: 15))
+        .asyncMap((_) => _fetchCirclePets(circleId));
+  }
 
   Future<List<PetModel>> _fetchCirclePets(String circleId) async {
     try {

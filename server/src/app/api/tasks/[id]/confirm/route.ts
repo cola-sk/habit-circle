@@ -6,12 +6,12 @@ import { ok, fail, unauthorized } from "@/lib/response";
 // PATCH /api/tasks/:id/confirm — 家长确认任务完成
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  context: RouteContext<"/api/tasks/[id]/confirm">
 ) {
   const userId = await getAuthUser(req);
   if (!userId) return unauthorized();
 
-  const { id: taskId } = await params;
+  const { id: taskId } = await context.params;
 
   const taskLog = await prisma.taskLog.findUnique({ where: { id: taskId } });
   if (!taskLog) return fail("任务记录不存在", 404);

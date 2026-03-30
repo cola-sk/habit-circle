@@ -4,9 +4,7 @@ import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_colors.dart';
-import '../../../providers/auth_provider.dart';
 import '../../../repositories/user_repository.dart';
-import '../../../models/user_model.dart';
 
 class CreateProfileScreen extends ConsumerStatefulWidget {
   const CreateProfileScreen({super.key});
@@ -92,19 +90,14 @@ class _CreateProfileScreenState extends ConsumerState<CreateProfileScreen> {
 
     setState(() => _isLoading = true);
     try {
-      final uid = ref.read(currentUidProvider);
-      if (uid == null) return;
-
-      await ref.read(userRepositoryProvider).createUser(
-            UserModel(
-              uid: uid,
-              phone: '',
-              childName: name,
-              createdAt: DateTime.now(),
-            ),
-          );
-
-      if (mounted) context.go('/onboarding/pet');
+      await ref.read(userRepositoryProvider).updateChildName(name);
+      if (mounted) context.go('/onboarding/circle');
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('保存失败：$e')),
+        );
+      }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }

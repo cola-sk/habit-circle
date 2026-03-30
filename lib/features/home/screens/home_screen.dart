@@ -737,14 +737,14 @@ class _NoPetCard extends StatelessWidget {
             const Text('🍉', style: TextStyle(fontSize: 52)),
             const SizedBox(height: 12),
             const Text(
-              '还没有宠物，去领养一只小西瓜吧！',
+              '还没有西瓜，先种下一颗种子吧！',
               style: TextStyle(fontSize: 16, color: Color(0xFF545D62)),
             ),
             const SizedBox(height: 16),
             ElevatedButton.icon(
-              onPressed: () => context.go('/onboarding/pet'),
-              icon: const Icon(Icons.pets),
-              label: const Text('领养宠物'),
+              onPressed: () => context.go('/onboarding/circle'),
+              icon: const Icon(Icons.eco),
+              label: const Text('开始养西瓜'),
             ),
           ],
         ),

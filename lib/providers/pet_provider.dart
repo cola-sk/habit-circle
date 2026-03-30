@@ -3,11 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/pet_model.dart';
 import '../repositories/pet_repository.dart';
 import '../providers/circle_provider.dart';
+import '../providers/auth_provider.dart';
 
 /// 当前用户的宠物（轮询流）
-final myPetProvider = StreamProvider<PetModel?>(
-  (ref) => ref.watch(petRepositoryProvider).watchPet(),
-);
+final myPetProvider = StreamProvider<PetModel?>((ref) {
+  final isLoggedIn = ref.watch(authStateNotifierProvider).isLoggedIn;
+  if (!isLoggedIn) return Stream.value(null);
+  return ref.watch(petRepositoryProvider).watchPet();
+});
 
 /// 圈子内所有宠物（通过圈子 ID 轮询）
 final circlePetsProvider = StreamProvider<List<PetModel>>((ref) {

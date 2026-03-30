@@ -6,7 +6,7 @@ import { ok, fail, unauthorized } from "@/lib/response";
 
 const createSchema = z.object({
   name: z.string().min(1).max(8),
-  species: z.enum(["cat", "dog", "rabbit", "dragon", "hamster"]),
+  species: z.enum(["watermelon", "cat", "dog", "rabbit", "dragon", "hamster"]),
 });
 
 // POST /api/pets  — 创建宠物
@@ -38,7 +38,6 @@ export async function GET(req: NextRequest) {
   if (!userId) return unauthorized();
 
   const pet = await prisma.pet.findUnique({ where: { ownerId: userId } });
-  if (!pet) return fail("还没有宠物", 404);
-
-  return ok(pet);
+  // 还没有西瓜是正常状态，返回 null 而非报错
+  return ok(pet ?? null);
 }

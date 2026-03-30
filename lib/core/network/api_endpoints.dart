@@ -3,7 +3,7 @@ class ApiEndpoints {
   ApiEndpoints._();
 
   /// 开发时：Next.js 本地服务
-  /// 发布时：换成你的服务器域名
+  /// 发布时：https://hc-server.tz0618.uk
   static const baseUrl = String.fromEnvironment(
     'API_BASE_URL',
     defaultValue: 'http://localhost:3000',

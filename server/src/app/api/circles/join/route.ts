@@ -14,6 +14,7 @@ export async function POST(req: NextRequest) {
   if (!userId) return unauthorized();
 
   const body = await req.json().catch(() => null);
+  console.log("[circles/join] body:", JSON.stringify(body));
   const parsed = joinSchema.safeParse(body);
   if (!parsed.success) return fail("邀请码格式不正确");
 

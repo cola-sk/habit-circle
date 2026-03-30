@@ -3,11 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/task_log_model.dart';
 import '../repositories/task_repository.dart';
 import '../core/constants/task_types.dart';
+import 'auth_provider.dart';
 
 /// 今日任务记录（轮询流）
-final todayTaskLogsProvider = StreamProvider<List<TaskLogModel>>(
-  (ref) => ref.watch(taskRepositoryProvider).watchTodayLogs(),
-);
+final todayTaskLogsProvider = StreamProvider<List<TaskLogModel>>((ref) {
+  final isLoggedIn = ref.watch(authStateNotifierProvider).isLoggedIn;
+  if (!isLoggedIn) return Stream.value(const []);
+  return ref.watch(taskRepositoryProvider).watchTodayLogs();
+});
 
 /// 今日累计积分
 final todayPointsProvider = Provider<int>((ref) {

@@ -11,8 +11,10 @@ class AuthRepository {
   final ApiClient _client;
   AuthRepository(this._client);
 
-  Future<void> sendCode(String phone) async {
-    await _client.post(ApiEndpoints.sendCode, body: {'phone': phone});
+  /// 返回服务端下发的调试验证码（未配置短信时有值，生产环境为 null）
+  Future<String?> sendCode(String phone) async {
+    final data = await _client.post(ApiEndpoints.sendCode, body: {'phone': phone});
+    return data['code'] as String?;
   }
 
   Future<Map<String, dynamic>> verifyCode({

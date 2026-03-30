@@ -18,11 +18,12 @@ class TaskRepository {
     return '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
   }
 
-  /// 今日任务轮询流（每 10 秒刷新）
-  Stream<List<TaskLogModel>> watchTodayLogs() => Stream.periodic(
-        const Duration(seconds: 10),
-        (_) => _fetchTodayLogs(),
-      ).asyncMap((f) => f).asBroadcastStream();
+  /// 今日任务轮询流（立即发射一次，之后每 10 秒刷新）
+  Stream<List<TaskLogModel>> watchTodayLogs() async* {
+    yield await _fetchTodayLogs();
+    yield* Stream.periodic(const Duration(seconds: 10))
+        .asyncMap((_) => _fetchTodayLogs());
+  }
 
   Future<List<TaskLogModel>> _fetchTodayLogs() async {
     try {

@@ -1,9 +1,7 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../providers/auth_provider.dart';
-import '../../providers/circle_provider.dart';
 import '../../features/onboarding/screens/welcome_screen.dart';
 import '../../features/onboarding/screens/phone_auth_screen.dart';
 import '../../features/onboarding/screens/create_profile_screen.dart';
@@ -13,12 +11,13 @@ import '../../features/shell/main_shell.dart';
 import '../../features/home/screens/home_screen.dart';
 import '../../features/tasks/screens/tasks_screen.dart';
 import '../../features/circle/screens/circle_screen.dart';
+import '../../features/growth/screens/growth_details_screen.dart';
 import '../../features/profile/screens/profile_screen.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   // 监听 auth 状态，做路由重定向
-    final authState = ref.watch(isLoggedInProvider);
-  final currentUser = ref.watch(currentUserProvider);
+  ref.watch(isLoggedInProvider);
+  ref.watch(currentUserProvider);
 
   return GoRouter(
     initialLocation: '/home',
@@ -53,6 +52,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/onboarding/circle',
         builder: (_, __) => const CircleSetupScreen(),
       ),
+      GoRoute(
+        path: '/growth',
+        redirect: (_, __) => '/profile/growth',
+      ),
 
       // ── Main App（带 BottomNavBar 的 Shell）────────────────────────────
       ShellRoute(
@@ -73,6 +76,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/profile',
             builder: (_, __) => const ProfileScreen(),
+            routes: [
+              GoRoute(
+                path: 'growth',
+                builder: (_, __) => const GrowthDetailsScreen(),
+              ),
+            ],
           ),
         ],
       ),

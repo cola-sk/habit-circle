@@ -55,6 +55,11 @@ class ProfileScreen extends ConsumerWidget {
                     growthStage: pet?.growthStage ?? 'seed',
                     growthStageName: pet?.growthStageDisplayName ?? '种子期',
                   ),
+                  const SizedBox(height: 10),
+                  _GrowthAtlasEntryCard(
+                    stageName: pet?.growthStageDisplayName ?? '种子期',
+                    onTap: () => context.push('/profile/growth'),
+                  ),
                   const SizedBox(height: 14),
                   _WeeklyGoalCard(
                     progress: weeklyProgress,
@@ -419,6 +424,56 @@ class _HeroMetricChip extends StatelessWidget {
               ),
             ),
           ],
+        ],
+      ),
+    );
+  }
+}
+
+class _GrowthAtlasEntryCard extends StatelessWidget {
+  final String stageName;
+  final VoidCallback onTap;
+
+  const _GrowthAtlasEntryCard({
+    required this.stageName,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0x1AA5AEB4)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.menu_book_rounded, color: Color(0xFFB21D27)),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              '成长图鉴 · 当前$stageName',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontSize: 14,
+                color: Color(0xFF273034),
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: onTap,
+            child: const Text(
+              '查看全部阶段',
+              style: TextStyle(
+                color: Color(0xFFB21D27),
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+          ),
         ],
       ),
     );

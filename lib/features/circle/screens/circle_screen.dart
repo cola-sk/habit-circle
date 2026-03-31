@@ -25,7 +25,7 @@ class CircleScreen extends ConsumerWidget {
         backgroundColor: const Color(0xFFE8F5E9),
         appBar: AppBar(
           title: const Text(
-            '西瓜广场',
+            '西瓜地',
             style: TextStyle(
                 fontWeight: FontWeight.w900,
                 fontSize: 20,
@@ -36,8 +36,8 @@ class CircleScreen extends ConsumerWidget {
           scrolledUnderElevation: 0,
           bottom: TabBar(
             tabs: [
-              const Tab(text: '全部圈子'),
-              if (hasCircle) const Tab(text: '我的圈子'),
+              if (hasCircle) const Tab(text: '我的'),
+              const Tab(text: '全部'),
             ],
             labelStyle: const TextStyle(
                 fontWeight: FontWeight.w900, fontSize: 14),
@@ -48,8 +48,8 @@ class CircleScreen extends ConsumerWidget {
         ),
         body: TabBarView(
           children: [
-            const _AllCirclesTab(),
             if (hasCircle) const _MyCircleTab(),
+            const _AllCirclesTab(),
           ],
         ),
       ),
@@ -270,19 +270,9 @@ class _PlazaContent extends ConsumerWidget {
     // 直接从本地缓存取最新积分，不依赖圈子接口延迟刷新
     final myPetLatest = ref.watch(myPetProvider).valueOrNull;
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFE8F5E9),
-      appBar: AppBar(
-        title: const Text('西瓜广场',
-            style: TextStyle(
-                fontWeight: FontWeight.w900,
-                fontSize: 20,
-                color: Color(0xFF1B5E20))),
-        backgroundColor: Colors.white,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-      ),
-      body: Stack(
+    return ColoredBox(
+      color: const Color(0xFFE8F5E9),
+      child: Stack(
         children: [
           // 点状背景装饰
           Positioned.fill(
@@ -751,19 +741,9 @@ class _NoCirclePlaceholder extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFE8F5E9),
-      appBar: AppBar(
-        title: const Text('西瓜广场',
-            style: TextStyle(
-                fontWeight: FontWeight.w900,
-                fontSize: 20,
-                color: Color(0xFF1B5E20))),
-        backgroundColor: Colors.white,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-      ),
-      body: Center(
+    return ColoredBox(
+      color: const Color(0xFFE8F5E9),
+      child: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: const [

@@ -22,7 +22,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   final authNotifier = ref.read(authStateNotifierProvider);
 
   final router = GoRouter(
-    initialLocation: authNotifier.isLoggedIn ? '/home' : '/circle',
+    initialLocation: '/circle',
     // 登录状态变化时，GoRouter 自动重新评估 redirect（不重建路由器）
     refreshListenable: authNotifier,
     redirect: (context, state) {

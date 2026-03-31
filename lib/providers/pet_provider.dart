@@ -5,12 +5,23 @@ import '../repositories/pet_repository.dart';
 import '../providers/circle_provider.dart';
 import '../providers/auth_provider.dart';
 
-/// 当前用户的宠物
-final myPetProvider = FutureProvider<PetModel?>((ref) {
-  final isLoggedIn = ref.watch(authStateNotifierProvider).isLoggedIn;
-  if (!isLoggedIn) return Future.value(null);
-  return ref.watch(petRepositoryProvider).fetchMyPet();
-});
+/// 当前用户的宠物（AsyncNotifierProvider 以便任务完成后直接更新状态）
+final myPetProvider =
+    AsyncNotifierProvider<MyPetNotifier, PetModel?>(MyPetNotifier.new);
+
+class MyPetNotifier extends AsyncNotifier<PetModel?> {
+  @override
+  Future<PetModel?> build() {
+    final isLoggedIn = ref.watch(authStateNotifierProvider).isLoggedIn;
+    if (!isLoggedIn) return Future.value(null);
+    return ref.watch(petRepositoryProvider).fetchMyPet();
+  }
+
+  /// 任务完成后，直接用服务端返回的最新 pet 覆盖本地缓存，无需重新 fetch
+  void updateFromServer(PetModel pet) {
+    state = AsyncData(pet);
+  }
+}
 
 /// 圈子内所有宠物
 final circlePetsProvider = FutureProvider<List<PetModel>>((ref) {
@@ -18,22 +29,3 @@ final circlePetsProvider = FutureProvider<List<PetModel>>((ref) {
   if (circle == null) return Future.value([]);
   return ref.watch(petRepositoryProvider).fetchCirclePets(circle.id);
 });
-
-/// 喂食操作
-final feedPetProvider =
-    StateNotifierProvider<FeedPetNotifier, AsyncValue<void>>(
-  (ref) => FeedPetNotifier(ref),
-);
-
-class FeedPetNotifier extends StateNotifier<AsyncValue<void>> {
-  final Ref _ref;
-
-  FeedPetNotifier(this._ref) : super(const AsyncData(null));
-
-  Future<void> feed(int points) async {
-    state = const AsyncLoading();
-    state = await AsyncValue.guard(
-      () => _ref.read(petRepositoryProvider).feedPet(points),
-    );
-  }
-}

@@ -133,10 +133,10 @@ class _PointsChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text('🌱', style: TextStyle(fontSize: 14)),
+          const Text('�', style: TextStyle(fontSize: 14)),
           const SizedBox(width: 4),
           Text(
-            '$points 西瓜子',
+            '$points 积分',
             style: const TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w900,

@@ -7,7 +7,6 @@ import '../../../providers/auth_provider.dart';
 import '../../../providers/pet_provider.dart';
 import '../../../providers/task_provider.dart';
 import '../../../models/pet_model.dart';
-
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
@@ -17,8 +16,6 @@ class HomeScreen extends ConsumerWidget {
     final user = ref.watch(currentUserProvider).valueOrNull;
     final todayPoints = ref.watch(todayPointsProvider);
     final taskLogs = ref.watch(todayTaskLogsProvider).valueOrNull ?? const [];
-    final feedState = ref.watch(feedPetProvider);
-    final isFeeding = feedState is AsyncLoading;
 
     return Scaffold(
       backgroundColor: const Color(0xFFEFF8FE),
@@ -34,12 +31,6 @@ class HomeScreen extends ConsumerWidget {
               todayPoints: todayPoints,
               logsCount: taskLogs.length,
               completedCount: taskLogs.where((e) => e.completed).length,
-              isFeeding: isFeeding,
-              onFeed: () {
-                final feedCost = todayPoints >= 20 ? 20 : todayPoints;
-                if (feedCost <= 0) return;
-                ref.read(feedPetProvider.notifier).feed(feedCost);
-              },
               onGoTasks: () => context.go('/tasks'),
             );
           },
@@ -55,8 +46,6 @@ class _FarmHomeBody extends StatelessWidget {
   final int todayPoints;
   final int logsCount;
   final int completedCount;
-  final bool isFeeding;
-  final VoidCallback onFeed;
   final VoidCallback onGoTasks;
 
   const _FarmHomeBody({
@@ -65,25 +54,15 @@ class _FarmHomeBody extends StatelessWidget {
     required this.todayPoints,
     required this.logsCount,
     required this.completedCount,
-    required this.isFeeding,
-    required this.onFeed,
     required this.onGoTasks,
   });
 
   @override
   Widget build(BuildContext context) {
-    final now = DateTime.now();
-    final lastFed = pet.lastFedAt;
-    final alreadyFedToday = lastFed != null &&
-        lastFed.year == now.year &&
-        lastFed.month == now.month &&
-        lastFed.day == now.day;
-
     final taskTarget = logsCount < 5 ? 5 : logsCount;
     final clampedDone = completedCount.clamp(0, taskTarget);
     final taskProgress = taskTarget == 0 ? 0.0 : clampedDone / taskTarget;
     final sizeKg = (0.4 + pet.level * 0.2).clamp(0.6, 9.9).toDouble();
-    final canFeed = !alreadyFedToday && todayPoints > 0 && !isFeeding;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
@@ -232,13 +211,7 @@ class _FarmHomeBody extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
-          _FeedSnackButton(
-            canFeed: canFeed,
-            alreadyFedToday: alreadyFedToday,
-            isLoading: isFeeding,
-            feedCost: todayPoints >= 20 ? 20 : todayPoints,
-            onTap: onFeed,
-          ),
+          _TodayGrowthCard(todayPoints: todayPoints),
           const SizedBox(height: 14),
           Row(
             children: [
@@ -271,7 +244,7 @@ class _FarmHomeBody extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            '喂养提醒：今日可用西瓜子 $todayPoints',
+            '完成任务可让西瓜长得更大 🍉',
             textAlign: TextAlign.center,
             style: const TextStyle(
               color: Color(0xFF6F787D),
@@ -498,106 +471,104 @@ class _StatCard extends StatelessWidget {
   }
 }
 
-class _FeedSnackButton extends StatelessWidget {
-  final bool canFeed;
-  final bool alreadyFedToday;
-  final bool isLoading;
-  final int feedCost;
-  final VoidCallback onTap;
+class _TodayGrowthCard extends StatelessWidget {
+  final int todayPoints;
 
-  const _FeedSnackButton({
-    required this.canFeed,
-    required this.alreadyFedToday,
-    required this.isLoading,
-    required this.feedCost,
-    required this.onTap,
-  });
+  const _TodayGrowthCard({required this.todayPoints});
 
   @override
   Widget build(BuildContext context) {
+    // 每日 80 分为满状态
+    final progress = (todayPoints / 80).clamp(0.0, 1.0);
+    final statusText = todayPoints >= 80
+        ? '西瓜今天超开心 😄'
+        : todayPoints >= 60
+            ? '西瓜今天很满足 😊'
+            : todayPoints >= 30
+                ? '继续努力，西瓜在等你！ 😕'
+                : todayPoints > 0
+                    ? '西瓜有点渴了，快去完成任务！ 😢'
+                    : '完成任务让西瓜长大吧 🌱';
+
     return DecoratedBox(
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFFB21D27), Color(0xFFFF7671)],
+          colors: [Color(0xFF2E7D32), Color(0xFF66BB6A)],
         ),
         borderRadius: BorderRadius.circular(22),
         boxShadow: const [
           BoxShadow(
-            color: Color(0x33B21D27),
+            color: Color(0x332E7D32),
             blurRadius: 20,
             offset: Offset(0, 8),
           ),
         ],
       ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(22),
-          onTap: canFeed ? onTap : null,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            child: Row(
-              children: [
-                Container(
-                  width: 46,
-                  height: 46,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.24),
-                    shape: BoxShape.circle,
-                  ),
-                  child:
-                      const Icon(Icons.cookie, color: Colors.white, size: 28),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Feed Snack',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        alreadyFedToday
-                            ? '今日已喂食'
-                            : feedCost > 0
-                                ? '-$feedCost seeds'
-                                : '暂无西瓜子',
-                        style: const TextStyle(
-                          color: Color(0xCCFFFFFF),
-                          fontSize: 12,
-                          letterSpacing: 0.8,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                if (isLoading)
-                  const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        child: Row(
+          children: [
+            Container(
+              width: 46,
+              height: 46,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.24),
+                shape: BoxShape.circle,
+              ),
+              child: const Center(
+                child: Text('🍉', style: TextStyle(fontSize: 26)),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    statusText,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w900,
                     ),
-                  )
-                else
-                  const Icon(
-                    Icons.arrow_forward_ios_rounded,
-                    color: Colors.white,
-                    size: 22,
                   ),
+                  const SizedBox(height: 6),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(999),
+                    child: LinearProgressIndicator(
+                      value: progress,
+                      minHeight: 8,
+                      backgroundColor: Colors.white.withValues(alpha: 0.3),
+                      valueColor: const AlwaysStoppedAnimation(Colors.white),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 12),
+            Column(
+              children: [
+                Text(
+                  '$todayPoints',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 26,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                const Text(
+                  '今日积分',
+                  style: TextStyle(
+                    color: Color(0xCCFFFFFF),
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
               ],
             ),
-          ),
+          ],
         ),
       ),
     );

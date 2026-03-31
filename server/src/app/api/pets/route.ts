@@ -21,11 +21,26 @@ export async function POST(req: NextRequest) {
   const existing = await prisma.pet.findUnique({ where: { ownerId: userId } });
   if (existing) return fail("已经有宠物了");
 
+  // 汇总创建前已完成的任务积分，避免宠物初始 totalPoints 为 0
+  const agg = await prisma.taskLog.aggregate({
+    where: { userId },
+    _sum: { points: true },
+  });
+  const totalPoints = agg._sum.points ?? 0;
+
+  const LEVEL_THRESHOLDS = [0, 200, 500, 1000, 1800, 3000, 4500, 6500, 9000, 12000];
+  let level = 1;
+  for (let i = LEVEL_THRESHOLDS.length - 1; i >= 0; i--) {
+    if (totalPoints >= LEVEL_THRESHOLDS[i]) { level = i + 1; break; }
+  }
+
   const pet = await prisma.pet.create({
     data: {
       ownerId: userId,
       name: parsed.data.name,
       species: parsed.data.species,
+      totalPoints,
+      level,
     },
   });
 

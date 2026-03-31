@@ -4,6 +4,8 @@ import '../models/task_log_model.dart';
 import '../repositories/task_repository.dart';
 import '../core/constants/task_types.dart';
 import 'auth_provider.dart';
+import 'pet_provider.dart';
+import 'circle_provider.dart';
 
 /// 今日任务记录
 final todayTaskLogsProvider = FutureProvider<List<TaskLogModel>>((ref) {
@@ -42,9 +44,17 @@ class SubmitTaskNotifier extends StateNotifier<AsyncValue<void>> {
       durationMinutes: durationMinutes,
     );
     try {
-      final created = await _ref.read(taskRepositoryProvider).saveLog(log);
+      final (created, pet) =
+          await _ref.read(taskRepositoryProvider).saveLog(log);
       state = const AsyncData(null);
       _ref.invalidate(todayTaskLogsProvider);
+      // 直接用服务端返回的最新 pet 覆盖缓存，无需等待重新 fetch
+      if (pet != null) {
+        _ref.read(myPetProvider.notifier).updateFromServer(pet);
+      } else {
+        _ref.invalidate(myPetProvider);
+      }
+      _ref.invalidate(circlePetsProvider);
       return created;
     } catch (e, st) {
       state = AsyncError(e, st);
@@ -67,9 +77,17 @@ class SubmitTaskNotifier extends StateNotifier<AsyncValue<void>> {
       durationMinutes: durationMinutes,
     );
     try {
-      final created = await _ref.read(taskRepositoryProvider).saveLog(log);
+      final (created, pet) =
+          await _ref.read(taskRepositoryProvider).saveLog(log);
       state = const AsyncData(null);
       _ref.invalidate(todayTaskLogsProvider);
+      // 直接用服务端返回的最新 pet 覆盖缓存，无需等待重新 fetch
+      if (pet != null) {
+        _ref.read(myPetProvider.notifier).updateFromServer(pet);
+      } else {
+        _ref.invalidate(myPetProvider);
+      }
+      _ref.invalidate(circlePetsProvider);
       return created;
     } catch (e, st) {
       state = AsyncError(e, st);

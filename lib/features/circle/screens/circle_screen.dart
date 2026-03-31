@@ -45,6 +45,8 @@ class _PlazaContent extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final petsAsync = ref.watch(circlePetsProvider);
     final currentUid = ref.watch(currentUidProvider);
+    // 直接从本地缓存取最新积分，不依赖圈子接口延迟刷新
+    final myPetLatest = ref.watch(myPetProvider).valueOrNull;
 
     return Scaffold(
       backgroundColor: const Color(0xFFE8F5E9),
@@ -63,6 +65,7 @@ class _PlazaContent extends ConsumerWidget {
               circle: circle,
               pets: pets,
               currentUid: currentUid,
+              myPetLatest: myPetLatest,
             ),
           ),
         ],
@@ -75,11 +78,13 @@ class _PlazaBody extends StatelessWidget {
   final CircleModel circle;
   final List<PetModel> pets;
   final String? currentUid;
+  final PetModel? myPetLatest;
 
   const _PlazaBody({
     required this.circle,
     required this.pets,
     required this.currentUid,
+    this.myPetLatest,
   });
 
   @override
@@ -91,8 +96,9 @@ class _PlazaBody extends StatelessWidget {
         return b.level.compareTo(a.level);
       });
 
-    // 找自己的宠物用于统计
-    final myPet = pets.where((p) => p.ownerId == currentUid).firstOrNull;
+    // 找自己的宠物用于统计（优先用本地最新缓存，兜底从圈子列表匹配）
+    final myPetFromList = pets.where((p) => p.ownerId == currentUid).firstOrNull;
+    final myPet = myPetLatest ?? myPetFromList;
     final myRank = sorted.indexWhere((p) => p.ownerId == currentUid) + 1;
 
     return ListView(
@@ -169,7 +175,7 @@ class _InviteBanner extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  const Icon(Icons.pets_rounded, color: Colors.white, size: 28),
+                  const Text('🍉', style: TextStyle(fontSize: 26)),
                   const SizedBox(width: 10),
                   Text(
                     circleName,
@@ -257,9 +263,9 @@ class _StatsRow extends StatelessWidget {
         const SizedBox(width: 12),
         Expanded(
           child: _StatCard(
-            icon: Icons.star_rounded,
+            icon: Icons.emoji_events_rounded,
             iconColor: AppColors.secondary,
-            label: '西瓜子',
+            label: '总积分',
             value: '$points',
           ),
         ),
@@ -405,7 +411,7 @@ class _PetGrid extends StatelessWidget {
         child: Padding(
           padding: EdgeInsets.all(32),
           child: Text(
-            '圈子里还没有宠物 🌱',
+            '圈子里还没有西瓜 🌱',
             style: TextStyle(color: AppColors.textSecondary),
           ),
         ),
@@ -489,7 +495,7 @@ class _TipCard extends StatelessWidget {
                 ),
                 SizedBox(height: 4),
                 Text(
-                  '给小伙伴加油可以获得额外种子奖励哦！',
+                  '给小伙伴的西瓜加油，一起把西瓜养得又大又甜！',
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,

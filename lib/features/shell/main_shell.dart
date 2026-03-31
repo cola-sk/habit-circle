@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/circle_provider.dart';
+import '../../providers/pet_provider.dart';
 
 class MainShell extends ConsumerWidget {
   final Widget child;
@@ -30,6 +32,11 @@ class MainShell extends ConsumerWidget {
         activeIndex: activeIndex,
         onTap: (i) {
           final tab = _tabs[i];
+          // 每次切换到圈子广场时，刷新圈子和当前用户积分数据
+          if (tab.path == '/circle') {
+            ref.invalidate(circlePetsProvider);
+            ref.invalidate(myPetProvider);
+          }
           if (tab.requiresAuth && !isLoggedIn) {
             context.go('/onboarding/auth');
           } else {

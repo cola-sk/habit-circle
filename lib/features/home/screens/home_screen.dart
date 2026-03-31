@@ -231,8 +231,9 @@ class _FarmHomeBody extends StatelessWidget {
               Expanded(
                 child: _QuickInfoCard(
                   icon: Icons.water_drop,
+                  iconWidget: _StatusIcon(todayPoints: todayPoints),
                   title: '水分状态',
-                  subtitle: _waterLevelText(pet.hungerStatus.name),
+                  subtitle: _waterLevelText(todayPoints),
                   backgroundColor: const Color(0x3091F78E),
                   borderColor: const Color(0x6691F78E),
                   iconBackground: const Color(0xFF006B1B),
@@ -258,11 +259,9 @@ class _FarmHomeBody extends StatelessWidget {
     );
   }
 
-  static String _waterLevelText(String hungerName) {
-    if (hungerName == 'happy' || hungerName == 'normal') {
-      return 'Water Level: OK';
-    }
-    if (hungerName == 'hungry') return 'Water Level: LOW';
+  static String _waterLevelText(int todayPoints) {
+    if (todayPoints >= 60) return 'Water Level: OK';
+    if (todayPoints >= 30) return 'Water Level: LOW';
     return 'Water Level: CRITICAL';
   }
 
@@ -283,6 +282,29 @@ class _FarmHomeBody extends StatelessWidget {
       default:
         return 'assets/images/growth/seed.png';
     }
+  }
+}
+
+class _StatusIcon extends StatelessWidget {
+  final int todayPoints;
+
+  const _StatusIcon({required this.todayPoints});
+
+  @override
+  Widget build(BuildContext context) {
+    final String asset;
+    if (todayPoints >= 60) {
+      asset = 'assets/images/status/happy.png';
+    } else if (todayPoints >= 30) {
+      asset = 'assets/images/status/hungry.png';
+    } else {
+      asset = 'assets/images/status/starving.png';
+    }
+    return SizedBox(
+      width: 36,
+      height: 36,
+      child: Image.asset(asset, fit: BoxFit.contain),
+    );
   }
 }
 
@@ -577,6 +599,7 @@ class _TodayGrowthCard extends StatelessWidget {
 
 class _QuickInfoCard extends StatelessWidget {
   final IconData icon;
+  final Widget? iconWidget;
   final String title;
   final String subtitle;
   final Color backgroundColor;
@@ -587,6 +610,7 @@ class _QuickInfoCard extends StatelessWidget {
 
   const _QuickInfoCard({
     required this.icon,
+    this.iconWidget,
     required this.title,
     required this.subtitle,
     required this.backgroundColor,
@@ -610,7 +634,7 @@ class _QuickInfoCard extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Container(
+            iconWidget ?? Container(
               width: 28,
               height: 28,
               decoration: BoxDecoration(

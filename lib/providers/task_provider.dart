@@ -20,6 +20,45 @@ final todayPointsProvider = Provider<int>((ref) {
   return logs.fold(0, (sum, log) => sum + log.points);
 });
 
+/// 本周（本周一到今天）所有任务记录，用于本周目标完成度
+final thisWeekTaskLogsProvider = FutureProvider<List<TaskLogModel>>((ref) async {
+  final isLoggedIn = ref.watch(authStateNotifierProvider).isLoggedIn;
+  if (!isLoggedIn) return const [];
+  final now = DateTime.now();
+  final today = DateTime(now.year, now.month, now.day);
+  final monday = today.subtract(Duration(days: today.weekday - 1));
+  final repo = ref.watch(taskRepositoryProvider);
+  final days = <String>[];
+  var d = monday;
+  while (!d.isAfter(today)) {
+    days.add(
+        '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}');
+    d = d.add(const Duration(days: 1));
+  }
+  final results =
+      await Future.wait(days.map((date) => repo.fetchLogsByDate(date)));
+  return results.expand((x) => x).toList();
+});
+
+/// 最近5天（含今天）每天积分 Map，key 为 'YYYY-MM-DD'，用于周成长趋势图
+final recentFiveDaysPointsProvider =
+    FutureProvider<Map<String, int>>((ref) async {
+  final isLoggedIn = ref.watch(authStateNotifierProvider).isLoggedIn;
+  if (!isLoggedIn) return const {};
+  final now = DateTime.now();
+  final repo = ref.watch(taskRepositoryProvider);
+  final dates = List.generate(5, (i) {
+    final d = now.subtract(Duration(days: 4 - i));
+    return '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+  });
+  final results =
+      await Future.wait(dates.map((date) => repo.fetchLogsByDate(date)));
+  return {
+    for (int i = 0; i < dates.length; i++)
+      dates[i]: results[i].fold(0, (sum, log) => sum + log.points),
+  };
+});
+
 /// 提交完成任务
 final submitTaskProvider =
     StateNotifierProvider<SubmitTaskNotifier, AsyncValue<void>>(

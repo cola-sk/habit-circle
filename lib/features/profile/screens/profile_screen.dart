@@ -22,6 +22,10 @@ class ProfileScreen extends ConsumerWidget {
     final pet = ref.watch(myPetProvider).valueOrNull;
     final logs =
         ref.watch(todayTaskLogsProvider).valueOrNull ?? const <TaskLogModel>[];
+    final weekLogs =
+        ref.watch(thisWeekTaskLogsProvider).valueOrNull ?? const <TaskLogModel>[];
+    final recentPoints =
+        ref.watch(recentFiveDaysPointsProvider).valueOrNull ?? const <String, int>{};
     final todayPoints = ref.watch(todayPointsProvider);
 
     return Scaffold(
@@ -33,13 +37,13 @@ class ProfileScreen extends ConsumerWidget {
           data: (user) {
             if (user == null) return const SizedBox.shrink();
 
-            final completedCount = logs.where((e) => e.completed).length;
+            final completedCount = weekLogs.where((e) => e.completed).length;
             const weeklyTarget = 20;
             final weeklyProgress = weeklyTarget == 0
                 ? 0.0
                 : (completedCount / weeklyTarget).clamp(0.0, 1.0);
             final ripenessPercent = _ripenessPercent(pet);
-            final weeklyBars = _buildWeeklyBars(logs);
+            final weeklyBars = _buildWeeklyBars(recentPoints);
 
             return SingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(20, 14, 20, 24),
@@ -101,25 +105,22 @@ class ProfileScreen extends ConsumerWidget {
     return (ratio * 100).round();
   }
 
-  static List<_DayBarData> _buildWeeklyBars(List<TaskLogModel> logs) {
+  static List<_DayBarData> _buildWeeklyBars(Map<String, int> pointsByDate) {
     final today = DateTime.now();
     final days = List.generate(5, (i) {
       final d = today.subtract(Duration(days: 4 - i));
       return DateTime(d.year, d.month, d.day);
     });
 
-    final pointsByDay = <DateTime, int>{for (final d in days) d: 0};
-
-    for (final log in logs) {
-      final day =
-          DateTime(log.createdAt.year, log.createdAt.month, log.createdAt.day);
-      if (!pointsByDay.containsKey(day)) continue;
-      pointsByDay[day] = (pointsByDay[day] ?? 0) + log.points;
-    }
-
-    final maxPoints = math.max(1, pointsByDay.values.fold(0, math.max));
+    final maxPoints = math.max(
+        1,
+        pointsByDate.values.isEmpty
+            ? 1
+            : pointsByDate.values.fold(0, math.max));
     return days.map((day) {
-      final points = pointsByDay[day] ?? 0;
+      final dateKey =
+          '${day.year}-${day.month.toString().padLeft(2, '0')}-${day.day.toString().padLeft(2, '0')}';
+      final points = pointsByDate[dateKey] ?? 0;
       final ratio = (points / maxPoints).clamp(0.0, 1.0);
       final isToday = _isSameDay(day, today);
       return _DayBarData(

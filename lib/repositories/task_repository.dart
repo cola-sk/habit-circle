@@ -23,10 +23,14 @@ class TaskRepository {
   Future<List<TaskLogModel>> fetchTodayLogs() => _fetchTodayLogs();
 
   Future<List<TaskLogModel>> _fetchTodayLogs() async {
+    return fetchLogsByDate(_todayDate);
+  }
+
+  Future<List<TaskLogModel>> fetchLogsByDate(String date) async {
     try {
       final data = await _client.get(
         ApiEndpoints.tasks,
-        queryParameters: {'date': _todayDate},
+        queryParameters: {'date': date},
       );
       final logs = data['logs'] as List<dynamic>;
       return logs

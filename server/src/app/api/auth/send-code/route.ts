@@ -30,12 +30,10 @@ export async function POST(req: NextRequest) {
   const expiresAt = new Date(Date.now() + 10 * 60_000); // 10 分钟有效
 
   await prisma.smsCode.create({ data: { phone, code, expiresAt } });
-  await sendSms(phone, code);
 
-  // 未配置短信服务时，把验证码明文返回，方便开发调试
-  const isSmsMocked = !process.env.ALIYUN_ACCESS_KEY_ID;
+  // 暂未接入短信服务，验证码直接返回客户端
   return ok({
     message: "验证码已发送",
-    ...(isSmsMocked && { code }),
+    code,
   });
 }

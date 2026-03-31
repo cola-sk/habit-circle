@@ -4,7 +4,6 @@ import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_colors.dart';
-import '../../../core/widgets/app_top_bar.dart';
 import '../../../models/circle_model.dart';
 import '../../../models/pet_model.dart';
 import '../../../providers/auth_provider.dart';
@@ -17,15 +16,238 @@ class CircleScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final currentUser = ref.watch(currentUserProvider).valueOrNull;
+    final hasCircle = currentUser?.circleId != null;
+
+    return DefaultTabController(
+      length: hasCircle ? 2 : 1,
+      child: Scaffold(
+        backgroundColor: const Color(0xFFE8F5E9),
+        appBar: AppBar(
+          title: const Text(
+            '西瓜广场',
+            style: TextStyle(
+                fontWeight: FontWeight.w900,
+                fontSize: 20,
+                color: Color(0xFF1B5E20)),
+          ),
+          backgroundColor: Colors.white,
+          elevation: 0,
+          scrolledUnderElevation: 0,
+          bottom: TabBar(
+            tabs: [
+              const Tab(text: '全部圈子'),
+              if (hasCircle) const Tab(text: '我的圈子'),
+            ],
+            labelStyle: const TextStyle(
+                fontWeight: FontWeight.w900, fontSize: 14),
+            indicatorColor: AppColors.secondary,
+            labelColor: AppColors.secondary,
+            unselectedLabelColor: AppColors.textSecondary,
+          ),
+        ),
+        body: TabBarView(
+          children: [
+            const _AllCirclesTab(),
+            if (hasCircle) const _MyCircleTab(),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── 全部圈子 Tab ──────────────────────────────────────────────
+class _AllCirclesTab extends ConsumerWidget {
+  const _AllCirclesTab();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final allAsync = ref.watch(allCirclesProvider);
+
+    return allAsync.when(
+      loading: () =>
+          const Center(child: CircularProgressIndicator()),
+      error: (e, _) => Center(child: Text('加载失败: $e')),
+      data: (circles) {
+        if (circles.isEmpty) {
+          return const Center(
+            child: Text('暂时还没有圈子，去创建第一个吧！',
+                style: TextStyle(color: AppColors.textSecondary)),
+          );
+        }
+        return RefreshIndicator(
+          onRefresh: () => ref.refresh(allCirclesProvider.future),
+          child: ListView.separated(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+            itemCount: circles.length,
+            separatorBuilder: (_, __) => const SizedBox(height: 12),
+            itemBuilder: (_, i) => _CircleCard(
+              circle: circles[i],
+              onTap: () => context.push('/circle/${circles[i].id}'),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+// ── 圈子卡片 ──────────────────────────────────────────────────
+class _CircleCard extends StatelessWidget {
+  final CircleModel circle;
+  final VoidCallback onTap;
+  const _CircleCard({required this.circle, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    // 取最高等级的3个宠物做预览
+    final previewPets = [...circle.members]
+      ..sort((a, b) =>
+          (b.pet?.level ?? 0).compareTo(a.pet?.level ?? 0));
+    final preview = previewPets.take(3).toList();
+    final totalPoints = circle.members
+        .fold(0, (sum, m) => sum + (m.pet?.totalPoints ?? 0));
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(
+              color: const Color(0xFF6CC24A), width: 2),
+          boxShadow: const [
+            BoxShadow(
+                color: Color(0xFF6CC24A),
+                blurRadius: 0,
+                offset: Offset(3, 4))
+          ],
+        ),
+        child: Row(
+          children: [
+            // 西瓜图标
+            Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                color: const Color(0xFFE8F5E9),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: const Center(
+                  child: Text('🍉', style: TextStyle(fontSize: 30))),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    circle.name,
+                    style: const TextStyle(
+                        fontWeight: FontWeight.w900,
+                        fontSize: 16,
+                        color: Color(0xFF1B5E20)),
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      _InfoChip('👦 ${circle.memberCount} 人'),
+                      const SizedBox(width: 6),
+                      _InfoChip('⭐ $totalPoints 分'),
+                    ],
+                  ),
+                  if (preview.isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        ...preview.map((m) => Padding(
+                              padding:
+                                  const EdgeInsets.only(right: 4),
+                              child: _MiniAvatar(
+                                  name: m.childName),
+                            )),
+                        if (circle.memberCount > 3)
+                          Text(
+                            '+${circle.memberCount - 3}',
+                            style: const TextStyle(
+                                fontSize: 11,
+                                color: AppColors.textSecondary),
+                          ),
+                      ],
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right_rounded,
+                color: Color(0xFF6CC24A)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _InfoChip extends StatelessWidget {
+  final String text;
+  const _InfoChip(this.text);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: BoxDecoration(
+        color: const Color(0xFFE8F5E9),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(text,
+          style: const TextStyle(
+              fontSize: 11,
+              color: Color(0xFF2E7D32),
+              fontWeight: FontWeight.w700)),
+    );
+  }
+}
+
+class _MiniAvatar extends StatelessWidget {
+  final String name;
+  const _MiniAvatar({required this.name});
+
+  @override
+  Widget build(BuildContext context) {
+    final initial = name.isNotEmpty ? name[0] : '?';
+    return Container(
+      width: 24,
+      height: 24,
+      decoration: const BoxDecoration(
+        color: Color(0xFF4CAF50),
+        shape: BoxShape.circle,
+      ),
+      child: Center(
+        child: Text(initial,
+            style: const TextStyle(
+                color: Colors.white,
+                fontSize: 11,
+                fontWeight: FontWeight.w900)),
+      ),
+    );
+  }
+}
+
+// ── 我的圈子 Tab ──────────────────────────────────────────────
+class _MyCircleTab extends ConsumerWidget {
+  const _MyCircleTab();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
     final circleAsync = ref.watch(myCircleProvider);
 
     return circleAsync.when(
-      loading: () => const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      ),
-      error: (e, _) => Scaffold(
-        body: Center(child: Text('加载失败: $e')),
-      ),
+      loading: () =>
+          const Center(child: CircularProgressIndicator()),
+      error: (e, _) => Center(child: Text('加载失败: $e')),
       data: (circle) {
         if (circle == null) return const _NoCirclePlaceholder();
         return _PlazaContent(circle: circle);
@@ -50,7 +272,16 @@ class _PlazaContent extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: const Color(0xFFE8F5E9),
-      appBar: const AppTopBar(title: '西瓜广场'),
+      appBar: AppBar(
+        title: const Text('西瓜广场',
+            style: TextStyle(
+                fontWeight: FontWeight.w900,
+                fontSize: 20,
+                color: Color(0xFF1B5E20))),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+      ),
       body: Stack(
         children: [
           // 点状背景装饰
@@ -522,7 +753,16 @@ class _NoCirclePlaceholder extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFE8F5E9),
-      appBar: const AppTopBar(title: '西瓜广场'),
+      appBar: AppBar(
+        title: const Text('西瓜广场',
+            style: TextStyle(
+                fontWeight: FontWeight.w900,
+                fontSize: 20,
+                color: Color(0xFF1B5E20))),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+      ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,

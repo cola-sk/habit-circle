@@ -11,7 +11,37 @@ function generateInviteCode(): string {
   ).join("");
 }
 
-// POST /api/circles  — 创建圈子
+// GET /api/circles  — 公开获取所有圈子列表（无需登录）
+export async function GET() {
+  const circles = await prisma.circle.findMany({
+    orderBy: { createdAt: "desc" },
+    include: {
+      members: {
+        select: {
+          id: true,
+          childName: true,
+          pet: { select: { name: true, level: true, totalPoints: true, species: true } },
+        },
+      },
+    },
+  });
+
+  return ok({
+    circles: circles.map((c) => ({
+      id: c.id,
+      name: c.name,
+      memberCount: c.members.length,
+      members: c.members.map((m) => ({
+        userId: m.id,
+        childName: m.childName,
+        pet: m.pet,
+      })),
+      createdAt: c.createdAt,
+    })),
+  });
+}
+
+
 const createSchema = z.object({
   name: z.string().min(1).max(15),
 });

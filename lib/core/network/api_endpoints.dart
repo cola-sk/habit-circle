@@ -34,4 +34,5 @@ class ApiEndpoints {
   static const circles     = '/api/circles';
   static const joinCircle  = '/api/circles/join';
   static String circleById(String id) => '/api/circles/$id';
+  static String circleJoinById(String id) => '/api/circles/$id/join';
 }

@@ -12,6 +12,11 @@ final myCircleProvider = FutureProvider<CircleModel?>((ref) {
   return ref.watch(circleRepositoryProvider).fetchCircle(circleId);
 });
 
+/// 全部圈子（公开，无需登录）
+final allCirclesProvider = FutureProvider<List<CircleModel>>((ref) {
+  return ref.watch(circleRepositoryProvider).fetchAllCircles();
+});
+
 /// 创建/加入圈子操作
 final circleSetupProvider =
     StateNotifierProvider<CircleSetupNotifier, AsyncValue<void>>(
@@ -37,6 +42,22 @@ class CircleSetupNotifier extends StateNotifier<AsyncValue<void>> {
       success = await _ref
           .read(circleRepositoryProvider)
           .joinCircleByCode(inviteCode);
+    });
+    return success;
+  }
+
+  Future<bool> joinCircleById(String circleId) async {
+    state = const AsyncLoading();
+    bool success = false;
+    state = await AsyncValue.guard(() async {
+      success = await _ref
+          .read(circleRepositoryProvider)
+          .joinCircleById(circleId);
+      if (success) {
+        _ref.invalidate(myCircleProvider);
+        _ref.invalidate(allCirclesProvider);
+        _ref.invalidate(currentUserProvider);
+      }
     });
     return success;
   }

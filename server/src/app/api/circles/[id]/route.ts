@@ -1,17 +1,17 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAuthUser } from "@/lib/auth";
-import { ok, fail, unauthorized } from "@/lib/response";
+import { ok, fail } from "@/lib/response";
 
-// GET /api/circles/[id]  — 获取圈子信息（含成员宠物）
+// GET /api/circles/[id]  — 公开获取圈子信息（含成员宠物），无需登录
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const userId = await getAuthUser(req);
-  if (!userId) return unauthorized();
-
   const { id } = await params;
+
+  // 当前用户（可能为空/未登录）
+  const userId = await getAuthUser(req).catch(() => null);
 
   const circle = await prisma.circle.findUnique({
     where: { id },
@@ -28,15 +28,16 @@ export async function GET(
 
   if (!circle) return fail("圈子不存在", 404);
 
-  // 验证当前用户是圈子成员
-  const isMember = circle.members.some((m) => m.id === userId);
-  if (!isMember) return fail("您不在这个圈子里", 403);
+  const isMember = userId
+    ? circle.members.some((m) => m.id === userId)
+    : false;
 
   return ok({
     id: circle.id,
     name: circle.name,
-    inviteCode: circle.inviteCode,
+    inviteCode: isMember ? circle.inviteCode : null,
     memberCount: circle.members.length,
+    isMember,
     members: circle.members.map((m) => ({
       userId: m.id,
       childName: m.childName,

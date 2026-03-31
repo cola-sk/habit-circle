@@ -12,6 +12,7 @@ import '../../features/shell/main_shell.dart';
 import '../../features/home/screens/home_screen.dart';
 import '../../features/tasks/screens/tasks_screen.dart';
 import '../../features/circle/screens/circle_screen.dart';
+import '../../features/circle/screens/circle_detail_screen.dart';
 import '../../features/growth/screens/growth_details_screen.dart';
 import '../../features/profile/screens/profile_screen.dart';
 import '../../features/circle/screens/invite_family_screen.dart';
@@ -31,8 +32,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       // 已登录：放行所有路由
       if (loggedIn) return null;
 
-      // 未登录：onboarding 路由放行，圈子广场放行
-      if (loc.startsWith('/onboarding') || loc == '/circle') return null;
+      // 未登录：onboarding 路由放行，圈子广场 + 圈子详情放行
+      if (loc.startsWith('/onboarding') || loc.startsWith('/circle')) return null;
       // home/tasks/profile 跳登录页
       return '/onboarding/auth';
     },
@@ -82,6 +83,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: 'invite',
                 builder: (_, __) => const InviteFamilyScreen(),
+              ),
+              GoRoute(
+                path: ':id',
+                builder: (_, state) => CircleDetailScreen(
+                  circleId: state.pathParameters['id']!,
+                ),
               ),
             ],
           ),

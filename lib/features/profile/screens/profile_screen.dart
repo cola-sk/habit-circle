@@ -222,7 +222,7 @@ class _TopBar extends StatelessWidget {
           const SizedBox(width: 8),
           const Expanded(
             child: Text(
-              'Grow Watermelon',
+              '养西瓜',
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(

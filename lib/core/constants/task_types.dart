@@ -13,6 +13,7 @@ enum TaskType {
 enum TaskEvidenceType {
   image, // 图片收集
   audio, // 语音收集
+  video, // 视频录制
 }
 
 extension TaskEvidenceTypeExtension on TaskEvidenceType {
@@ -22,6 +23,8 @@ extension TaskEvidenceTypeExtension on TaskEvidenceType {
         return '图片收集';
       case TaskEvidenceType.audio:
         return '语音收集';
+      case TaskEvidenceType.video:
+        return '视频录制';
     }
   }
 }

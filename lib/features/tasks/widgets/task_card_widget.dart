@@ -40,134 +40,142 @@ class TaskCardWidget extends StatelessWidget {
           width: isCompleted ? 2 : 1,
         ),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 图标
-          Container(
-            width: 50,
-            height: 50,
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: Center(
-              child: Text(tpl.emoji, style: const TextStyle(fontSize: 24)),
-            ),
-          ),
-          const Gap(14),
-          // 任务名称 + 积分说明
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  tpl.name,
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
+          // 上方：图标 + 任务名称 + 积分 + 已完成/删除
+          Row(
+            children: [
+              // 图标
+              Container(
+                width: 50,
+                height: 50,
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Center(
+                  child: Text(tpl.emoji, style: const TextStyle(fontSize: 24)),
+                ),
+              ),
+              const Gap(14),
+              // 任务名称 + 积分说明
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      tpl.name,
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const Gap(3),
+                    Text(
+                      tpl.isTimeBased
+                          ? '每15分钟 +${tpl.pointsPer15Min}分'
+                          : '完成即得 +${tpl.pointsPer15Min}分',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Gap(8),
+              if (isCompleted)
+                const _CompletedChip()
+              else
+                // 删除按钮单独放右上角
+                GestureDetector(
+                  onTap: onDelete,
+                  child: Container(
+                    width: 34,
+                    height: 34,
+                    decoration: BoxDecoration(
+                      color: const Color(0x0FFF3B30),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(
+                      Icons.delete_outline,
+                      size: 18,
+                      color: Color(0xFFFF3B30),
+                    ),
                   ),
                 ),
-                const Gap(3),
-                Text(
-                  tpl.isTimeBased
-                      ? '每15分钟 +${tpl.pointsPer15Min}分'
-                      : '完成即得 +${tpl.pointsPer15Min}分',
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              ],
-            ),
+            ],
           ),
-          const Gap(8),
-          // 右侧操作区
-          if (isCompleted)
-            const _CompletedChip()
-          else
-            _ActionArea(
+          // 下方：证据按钮行（仅未完成时显示）
+          if (!isCompleted) ...[
+            const Gap(10),
+            _EvidenceBtnRow(
               template: tpl,
               color: color,
               isProcessing: isProcessing,
               onUploadEvidence: onUploadEvidence,
-              onDelete: onDelete,
             ),
+          ],
         ],
       ),
     );
   }
 }
 
-// ── 右侧操作区：证据按钮 + 删除 ──────────────────────────────
+// ── 证据按钮行（横向铺满） ────────────────────────────────────
 
-class _ActionArea extends StatelessWidget {
+class _EvidenceBtnRow extends StatelessWidget {
   final TaskTemplateModel template;
   final Color color;
   final bool isProcessing;
   final ValueChanged<String> onUploadEvidence;
-  final VoidCallback onDelete;
 
-  const _ActionArea({
+  const _EvidenceBtnRow({
     required this.template,
     required this.color,
     required this.isProcessing,
     required this.onUploadEvidence,
-    required this.onDelete,
   });
 
   @override
   Widget build(BuildContext context) {
+    final buttons = <Widget>[];
+
+    if (template.supportsImage) {
+      buttons.add(_EvidenceBtn(
+        color: color,
+        icon: Icons.camera_alt,
+        label: '拍照',
+        isLoading: isProcessing,
+        onTap: () => onUploadEvidence('image'),
+      ));
+    }
+    if (template.supportsAudio) {
+      buttons.add(_EvidenceBtn(
+        color: color,
+        icon: Icons.mic,
+        label: '录音',
+        isLoading: isProcessing,
+        onTap: () => onUploadEvidence('audio'),
+      ));
+    }
+    if (template.supportsVideo) {
+      buttons.add(_EvidenceBtn(
+        color: color,
+        icon: Icons.videocam,
+        label: '录像',
+        isLoading: isProcessing,
+        onTap: () => onUploadEvidence('video'),
+      ));
+    }
+
     return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        if (template.supportsImage)
-          _EvidenceBtn(
-            color: color,
-            icon: Icons.camera_alt,
-            label: '拍照',
-            isLoading: isProcessing,
-            onTap: () => onUploadEvidence('image'),
-          ),
-        if (template.supportsImage && (template.supportsAudio || template.supportsVideo))
-          const SizedBox(width: 6),
-        if (template.supportsAudio)
-          _EvidenceBtn(
-            color: color,
-            icon: Icons.mic,
-            label: '录音',
-            isLoading: isProcessing,
-            onTap: () => onUploadEvidence('audio'),
-          ),
-        if (template.supportsAudio && template.supportsVideo)
-          const SizedBox(width: 6),
-        if (template.supportsVideo)
-          _EvidenceBtn(
-            color: color,
-            icon: Icons.videocam,
-            label: '录像',
-            isLoading: isProcessing,
-            onTap: () => onUploadEvidence('video'),
-          ),
-        const SizedBox(width: 6),
-        // 删除按钮
-        GestureDetector(
-          onTap: onDelete,
-          child: Container(
-            width: 34,
-            height: 34,
-            decoration: BoxDecoration(
-              color: const Color(0x0FFF3B30),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: const Icon(
-              Icons.delete_outline,
-              size: 18,
-              color: Color(0xFFFF3B30),
-            ),
-          ),
-        ),
-      ],
+      children: buttons
+          .expand((btn) => [btn, const SizedBox(width: 8)])
+          .toList()
+        ..removeLast(),
     );
   }
 }

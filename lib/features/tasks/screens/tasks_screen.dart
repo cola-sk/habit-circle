@@ -236,6 +236,10 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
   }
 
   Future<XFile?> _recordVideo() async {
+    if (kIsWeb) {
+      _showInfo('网页版不支持视频录制，请使用 App');
+      return null;
+    }
     final source = await _pickMediaSource(label: '录像');
     if (source == null) return null;
 
@@ -244,7 +248,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
     try {
       video = await picker.pickVideo(
         source: source,
-        maxDuration: const Duration(minutes: 2),
+        maxDuration: const Duration(minutes: 1),
       );
     } on PlatformException catch (e) {
       _showInfo('打开视频选择失败：${e.message ?? e.code}');

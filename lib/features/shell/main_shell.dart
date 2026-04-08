@@ -16,9 +16,9 @@ class MainShell extends ConsumerStatefulWidget {
   const MainShell({super.key, required this.child});
 
   static const _tabs = [
-    (path: '/circle',  label: '西瓜地', icon: Icons.grid_view_rounded,  requiresAuth: false),
-    (path: '/tasks',   label: '任务',   icon: Icons.task_alt_rounded,   requiresAuth: true),
     (path: '/home',    label: '我的',   icon: Icons.home_rounded,       requiresAuth: true),
+    (path: '/tasks',   label: '任务',   icon: Icons.task_alt_rounded,   requiresAuth: true),
+    (path: '/circle',  label: '西瓜地', icon: Icons.grid_view_rounded,  requiresAuth: false),
     (path: '/profile', label: '家长',   icon: Icons.child_care_rounded, requiresAuth: true),
   ];
 

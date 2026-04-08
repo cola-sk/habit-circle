@@ -31,7 +31,8 @@ class ApiEndpoints {
   static const userTasks = '/api/user-tasks';
   static String userTaskById(String id) => '/api/user-tasks/$id';
 
-  // Circles
+  // Cheers
+  static const cheers = '/api/cheers';
   static const circles     = '/api/circles';
   static const joinCircle  = '/api/circles/join';
   static String circleById(String id) => '/api/circles/$id';

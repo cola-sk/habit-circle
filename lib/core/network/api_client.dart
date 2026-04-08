@@ -55,6 +55,22 @@ class ApiClient {
               _unauthController.add(null);
             }
           }
+          // 服务端以 JSON { success: false, message: "..." } 形式返回错误时，
+          // 提取 message 并转成 ApiException，确保上层 catch 能拿到友好提示。
+          final responseData = error.response?.data;
+          if (responseData is Map<String, dynamic> &&
+              responseData['success'] == false) {
+            final msg = responseData['message'] as String? ?? '请求失败';
+            handler.reject(
+              DioException(
+                requestOptions: error.requestOptions,
+                response: error.response,
+                type: DioExceptionType.badResponse,
+                error: ApiException(msg),
+              ),
+            );
+            return;
+          }
           handler.next(error);
         },
       ),

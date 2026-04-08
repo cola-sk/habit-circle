@@ -10,15 +10,10 @@ import '../../../models/pet_model.dart';
 class PlazaPetCard extends StatelessWidget {
   final PetModel pet;
   final bool isMe;
-
-  /// 显示在卡片左上角的头像首字
   final String ownerInitial;
-
-  /// 孩子昵称（非 me 时显示在卡片名字行）
   final String ownerName;
-
-  /// 点击加油回调（isMe=false 时有效）
   final VoidCallback? onCheer;
+  final bool cheered;
 
   const PlazaPetCard({
     super.key,
@@ -27,6 +22,7 @@ class PlazaPetCard extends StatelessWidget {
     this.ownerName = '',
     this.isMe = false,
     this.onCheer,
+    this.cheered = false,
   });
 
   @override
@@ -90,7 +86,7 @@ class PlazaPetCard extends StatelessWidget {
                 if (isMe)
                   _ProgressBar(progress: pet.levelProgress)
                 else
-                  _CheerButton(onTap: onCheer),
+                  _CheerButton(onTap: onCheer, cheered: cheered),
               ],
             ),
           ),
@@ -205,39 +201,48 @@ class _ProgressBar extends StatelessWidget {
 
 class _CheerButton extends StatelessWidget {
   final VoidCallback? onTap;
+  final bool cheered;
 
-  const _CheerButton({this.onTap});
+  const _CheerButton({this.onTap, this.cheered = false});
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: onTap,
+      onTap: cheered ? null : onTap,
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 7),
         decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0xFF4CAF50), Color(0xFF2E7D32)],
-          ),
+          gradient: cheered
+              ? const LinearGradient(
+                  colors: [Color(0xFFBDBDBD), Color(0xFF9E9E9E)],
+                )
+              : const LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Color(0xFF4CAF50), Color(0xFF2E7D32)],
+                ),
           borderRadius: BorderRadius.circular(16),
-          boxShadow: const [
+          boxShadow: [
             BoxShadow(
-              color: Color(0xFF1B5E20),
-              offset: Offset(0, 3),
+              color: cheered ? const Color(0xFF757575) : const Color(0xFF1B5E20),
+              offset: const Offset(0, 3),
               blurRadius: 0,
             ),
           ],
         ),
-        child: const Row(
+        child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.favorite_rounded, color: Colors.white, size: 16),
-            SizedBox(width: 4),
+            Icon(
+              cheered ? Icons.check_rounded : Icons.favorite_rounded,
+              color: Colors.white,
+              size: 16,
+            ),
+            const SizedBox(width: 4),
             Text(
-              '加油',
-              style: TextStyle(
+              cheered ? '已加油' : '加油',
+              style: const TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w900,
                 color: Colors.white,

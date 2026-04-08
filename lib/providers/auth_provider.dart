@@ -1,6 +1,8 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../core/network/api_client.dart';
 import '../models/user_model.dart';
 import '../repositories/auth_repository.dart';
 import '../repositories/user_repository.dart';
@@ -101,7 +103,7 @@ class PhoneAuthNotifier extends StateNotifier<PhoneAuthState> {
     } catch (e) {
       state = state.copyWith(
         step: PhoneAuthStep.idle,
-        errorMessage: e.toString().replaceFirst('ApiException: ', ''),
+        errorMessage: _extractMessage(e),
       );
     }
   }
@@ -130,10 +132,20 @@ class PhoneAuthNotifier extends StateNotifier<PhoneAuthState> {
     } catch (e) {
       state = state.copyWith(
         step: PhoneAuthStep.codeSent,
-        errorMessage: e.toString().replaceFirst('ApiException: ', ''),
+        errorMessage: _extractMessage(e),
       );
     }
   }
 
   void reset() => state = const PhoneAuthState();
+}
+
+/// 从 ApiException / DioException / 普通 Exception 中提取可读消息。
+String _extractMessage(Object e) {
+  if (e is ApiException) return e.message;
+  // DioException 包裹 ApiException 时（onError 拦截器注入）
+  if (e is DioException && e.error is ApiException) {
+    return (e.error as ApiException).message;
+  }
+  return e.toString().replaceFirst('ApiException: ', '');
 }

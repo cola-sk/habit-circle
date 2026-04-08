@@ -14,11 +14,17 @@ import '../../../providers/pet_provider.dart';
 import '../../../providers/task_provider.dart';
 import '../../../repositories/auth_repository.dart';
 
-class ProfileScreen extends ConsumerWidget {
+class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends ConsumerState<ProfileScreen> {
+  @override
+  Widget build(BuildContext context) {
+    final ref = this.ref;
     final currentUser = ref.watch(currentUserProvider);
     final pet = ref.watch(myPetProvider).valueOrNull;
     final logs =

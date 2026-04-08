@@ -22,6 +22,8 @@ model User {
   pet       Pet?
   taskLogs  TaskLog[]
   userTasks UserTask[]
+  cheersGiven    Cheer[] @relation("CheersGiven")
+  cheersReceived Cheer[] @relation("CheersReceived")
 
   createdAt DateTime @default(now())
 
@@ -149,4 +151,21 @@ model SmsCode {
 
   @@index([phone])
   @@map("sms_codes")
+}
+
+// ── 加油记录 ──────────────────────────────────────────────────
+// 每人每天对同一目标最多加油一次（fromUserId + toUserId + date 唯一）
+model Cheer {
+  id         String   @id @default(cuid())
+  fromUserId String
+  fromUser   User     @relation("CheersGiven",    fields: [fromUserId], references: [id], onDelete: Cascade)
+  toUserId   String
+  toUser     User     @relation("CheersReceived", fields: [toUserId],   references: [id], onDelete: Cascade)
+  date       String   // YYYY-MM-DD，同一天同一对只能一次
+
+  createdAt  DateTime @default(now())
+
+  @@unique([fromUserId, toUserId, date])
+  @@index([toUserId, date])
+  @@map("cheers")
 }

@@ -9,6 +9,7 @@ import '../../../models/pet_model.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../providers/circle_provider.dart';
 import '../../../providers/pet_provider.dart';
+import '../../../repositories/cheer_repository.dart';
 import '../widgets/plaza_pet_card_widget.dart';
 
 class CircleScreen extends ConsumerWidget {
@@ -619,15 +620,47 @@ class _SectionHeader extends StatelessWidget {
 
 // ── 宠物网格 ──────────────────────────────────────────────────────────────────
 
-class _PetGrid extends StatelessWidget {
+class _PetGrid extends ConsumerStatefulWidget {
   final List<PetModel> pets;
   final String? currentUid;
 
   const _PetGrid({required this.pets, required this.currentUid});
 
   @override
+  ConsumerState<_PetGrid> createState() => _PetGridState();
+}
+
+class _PetGridState extends ConsumerState<_PetGrid> {
+  // 记录本次会话中已加油的 ownerId，避免重复点击
+  final Set<String> _cheeredIds = {};
+
+  Future<void> _sendCheer(PetModel pet) async {
+    if (_cheeredIds.contains(pet.ownerId)) return;
+    final name = pet.ownerName.isNotEmpty ? pet.ownerName : '小朋友';
+    try {
+      await ref.read(cheerRepositoryProvider).sendCheer(pet.ownerId);
+      setState(() => _cheeredIds.add(pet.ownerId));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('已为 $name 加油 💪'),
+            duration: const Duration(seconds: 2),
+            backgroundColor: const Color(0xFF2E7D32),
+          ),
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('今天已经给他加过油啦 😊')),
+        );
+      }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    if (pets.isEmpty) {
+    if (widget.pets.isEmpty) {
       return const Center(
         child: Padding(
           padding: EdgeInsets.all(32),
@@ -648,19 +681,20 @@ class _PetGrid extends StatelessWidget {
         mainAxisSpacing: 24,
         childAspectRatio: 0.76,
       ),
-      itemCount: pets.length,
+      itemCount: widget.pets.length,
       itemBuilder: (context, index) {
-        final pet = pets[index];
-        final isMe = pet.ownerId == currentUid;
-        // ownerName 首字做头像；无 ownerName 时降级到宠物名首字
+        final pet = widget.pets[index];
+        final isMe = pet.ownerId == widget.currentUid;
         final displayName = pet.ownerName.isNotEmpty ? pet.ownerName : pet.name;
         final initial = displayName.isNotEmpty ? displayName[0] : '?';
+        final alreadyCheered = _cheeredIds.contains(pet.ownerId);
         return PlazaPetCard(
           pet: pet,
           ownerInitial: initial,
           ownerName: pet.ownerName,
           isMe: isMe,
-          onCheer: isMe ? null : () {/* TODO: 加油功能 */},
+          cheered: alreadyCheered,
+          onCheer: isMe ? null : () => _sendCheer(pet),
         );
       },
     );

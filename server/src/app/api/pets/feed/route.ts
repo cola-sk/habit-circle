@@ -5,6 +5,8 @@ import { getAuthUser } from "@/lib/auth";
 import { ok, fail, unauthorized } from "@/lib/response";
 
 const LEVEL_THRESHOLDS = [0, 200, 500, 1000, 1800, 3000, 4500, 6500, 9000, 12000];
+// 成长阶段阈值（基于当前周期积分）
+const GROWTH_STAGE_THRESHOLDS = [0, 200, 1000, 1800, 3000]; // seed/sprout/flower/fruit/ripe
 
 function levelFromPoints(total: number): number {
   for (let i = LEVEL_THRESHOLDS.length - 1; i >= 0; i--) {
@@ -51,6 +53,7 @@ export async function POST(req: NextRequest) {
   }
 
   const newTotal = pet.totalPoints + points;
+  const newCycle = (pet.currentCyclePoints ?? 0) + points;
   const newLevel = levelFromPoints(newTotal);
   const newStatus = hungerStatusFromPoints(points);
 
@@ -58,6 +61,7 @@ export async function POST(req: NextRequest) {
     where: { ownerId: userId },
     data: {
       totalPoints: newTotal,
+      currentCyclePoints: newCycle,
       level: newLevel,
       lastFedAt: now,
       hungerStatus: newStatus,
@@ -65,5 +69,9 @@ export async function POST(req: NextRequest) {
   });
 
   const leveledUp = newLevel > pet.level;
-  return ok({ pet: updated, leveledUp });
+  // 判断是否刚到达成熟期（周期积分跨过阈值）
+  const prevStage = GROWTH_STAGE_THRESHOLDS.filter(t => (pet.currentCyclePoints ?? 0) >= t).length;
+  const newStage  = GROWTH_STAGE_THRESHOLDS.filter(t => newCycle >= t).length;
+  const reachedRipe = newStage >= GROWTH_STAGE_THRESHOLDS.length && prevStage < GROWTH_STAGE_THRESHOLDS.length;
+  return ok({ pet: updated, leveledUp, reachedRipe });
 }

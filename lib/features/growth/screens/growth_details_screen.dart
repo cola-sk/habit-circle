@@ -3,8 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/pet_species.dart';
+import '../../../core/widgets/ip_video_widget.dart';
 import '../../../models/pet_model.dart';
 import '../../../providers/pet_provider.dart';
+import '../../../providers/task_provider.dart';
 
 class GrowthDetailsScreen extends ConsumerWidget {
   const GrowthDetailsScreen({super.key});
@@ -23,13 +25,6 @@ class GrowthDetailsScreen extends ConsumerWidget {
       description: '开始出现小芽，习惯逐渐稳定',
       assetPath: 'assets/images/growth/sprout.png',
       icon: Icons.spa,
-    ),
-    _GrowthStageMeta(
-      key: 'vine',
-      title: '抽藤期',
-      description: '持续学习，藤蔓快速生长',
-      assetPath: 'assets/images/growth/vine.png',
-      icon: Icons.nature,
     ),
     _GrowthStageMeta(
       key: 'flower',
@@ -68,9 +63,12 @@ class GrowthDetailsScreen extends ConsumerWidget {
             if (pet == null) {
               return const Center(child: Text('还没有西瓜，先去创建一个吧'));
             }
+            final hasCompletedToday =
+                ref.watch(todayTaskLogsProvider).valueOrNull?.any((e) => e.completed) ?? false;
             return _GrowthContent(
               pet: pet,
               stages: _stages,
+              hasCompletedToday: hasCompletedToday,
             );
           },
         ),
@@ -82,10 +80,12 @@ class GrowthDetailsScreen extends ConsumerWidget {
 class _GrowthContent extends StatelessWidget {
   final PetModel pet;
   final List<_GrowthStageMeta> stages;
+  final bool hasCompletedToday;
 
   const _GrowthContent({
     required this.pet,
     required this.stages,
+    required this.hasCompletedToday,
   });
 
   @override
@@ -173,10 +173,7 @@ class _GrowthContent extends StatelessWidget {
                 SizedBox(
                   width: 220,
                   height: 220,
-                  child: Image.asset(
-                    currentStage.assetPath,
-                    fit: BoxFit.contain,
-                  ),
+                  child: _buildStageHero(currentStage.key),
                 ),
                 const SizedBox(height: 10),
                 Container(
@@ -291,6 +288,24 @@ class _GrowthContent extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Widget _buildStageHero(String stageKey) {
+    final stage = WatermelonGrowthStageExtension.fromName(stageKey);
+    final videoAsset = stage.ipVideoAsset(hasCompletedToday: hasCompletedToday);
+    if (videoAsset != null) {
+      return IpVideoWidget(
+        assetPath: videoAsset,
+        size: 220,
+        fallbackEmoji: '🌱',
+      );
+    }
+    // 该阶段暂无视频，降级为静态图
+    final meta = stages.firstWhere(
+      (s) => s.key == stageKey,
+      orElse: () => stages.first,
+    );
+    return Image.asset(meta.assetPath, fit: BoxFit.contain);
   }
 
   static int _currentStageIndex(

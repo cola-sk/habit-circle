@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/constants/pet_species.dart';
+import '../../../core/widgets/ip_video_widget.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../providers/pet_provider.dart';
 import '../../../providers/task_provider.dart';
@@ -40,7 +42,7 @@ class HomeScreen extends ConsumerWidget {
   }
 }
 
-class _FarmHomeBody extends StatelessWidget {
+class _FarmHomeBody extends ConsumerWidget {
   final String? childName;
   final PetModel pet;
   final int todayPoints;
@@ -58,7 +60,7 @@ class _FarmHomeBody extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final taskTarget = logsCount < 5 ? 5 : logsCount;
     final clampedDone = completedCount.clamp(0, taskTarget);
     final taskProgress = taskTarget == 0 ? 0.0 : clampedDone / taskTarget;
@@ -144,11 +146,10 @@ class _FarmHomeBody extends StatelessWidget {
                                 ),
                               ),
                             ),
-                            Image.asset(
-                              _growthImageAsset(pet.growthStage),
-                              width: 220,
-                              fit: BoxFit.contain,
-                            ).animate().fadeIn(duration: 450.ms).scale(
+                            _buildPetDisplay(pet.growthStage, completedCount > 0)
+                                .animate()
+                                .fadeIn(duration: 450.ms)
+                                .scale(
                                   begin: const Offset(0.92, 0.92),
                                   end: const Offset(1, 1),
                                   duration: 500.ms,
@@ -211,6 +212,10 @@ class _FarmHomeBody extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
+          if (pet.canHarvest) ...[
+            _HarvestBanner(pet: pet).animate().fadeIn(duration: 400.ms),
+            const SizedBox(height: 14),
+          ],
           _TodayGrowthCard(todayPoints: todayPoints),
           const SizedBox(height: 14),
           Row(
@@ -265,14 +270,29 @@ class _FarmHomeBody extends StatelessWidget {
     return 'Water Level: CRITICAL';
   }
 
+  static Widget _buildPetDisplay(String growthStage, bool hasCompletedToday) {
+    final stage = WatermelonGrowthStageExtension.fromName(growthStage);
+    final videoAsset = stage.ipVideoAsset(hasCompletedToday: hasCompletedToday);
+    if (videoAsset != null) {
+      return IpVideoWidget(
+        assetPath: videoAsset,
+        size: 220,
+        fallbackEmoji: '🌱',
+      );
+    }
+    return Image.asset(
+      _growthImageAsset(growthStage),
+      width: 220,
+      fit: BoxFit.contain,
+    );
+  }
+
   static String _growthImageAsset(String growthStage) {
     switch (growthStage) {
       case 'seed':
         return 'assets/images/growth/seed.png';
       case 'sprout':
         return 'assets/images/growth/sprout.png';
-      case 'vine':
-        return 'assets/images/growth/vine.png';
       case 'flower':
         return 'assets/images/growth/flower.png';
       case 'fruit':
@@ -373,6 +393,111 @@ class _TopHeader extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+// ─── 成熟期兑换横幅 ───────────────────────────────────────────────────────────
+class _HarvestBanner extends ConsumerWidget {
+  final PetModel pet;
+  const _HarvestBanner({required this.pet});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return GestureDetector(
+      onTap: () => _showHarvestDialog(context, ref),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFF1B6B1B), Color(0xFF3DAA3D)],
+          ),
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x3A1B6B1B),
+              blurRadius: 16,
+              offset: Offset(0, 6),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            const Text('🍉', style: TextStyle(fontSize: 36)),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    '西瓜成熟啦！',
+                    style: TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w900,
+                      color: Colors.white,
+                    ),
+                  ),
+                  Text(
+                    '第 ${pet.harvestCount + 1} 季 · 点击兑换真实西瓜 🎉',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Colors.white.withValues(alpha: 0.88),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right, color: Colors.white, size: 28),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _showHarvestDialog(BuildContext context, WidgetRef ref) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text('🍉 兑换真实西瓜'),
+        content: Text(
+          '这是你的第 ${pet.harvestCount + 1} 次丰收！\n\n'
+          '工作人员会联系你安排发货，兑换后西瓜将重新开始生长。\n\n'
+          '确认兑换吗？',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('再想想'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: const Color(0xFF1B6B1B)),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('确认兑换'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+    if (!context.mounted) return;
+
+    try {
+      await ref.read(myPetProvider.notifier).harvestPet();
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('🎉 兑换成功！工作人员将尽快联系你'),
+            backgroundColor: Color(0xFF1B6B1B),
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('兑换失败：$e')),
+        );
+      }
+    }
   }
 }
 

@@ -21,6 +21,12 @@ class MyPetNotifier extends AsyncNotifier<PetModel?> {
   void updateFromServer(PetModel pet) {
     state = AsyncData(pet);
   }
+
+  /// 兑换西瓜：调用 API 后积分重置，本地状态直接更新
+  Future<void> harvestPet() async {
+    final updated = await ref.read(petRepositoryProvider).harvestPet();
+    state = AsyncData(updated);
+  }
 }
 
 /// 圈子内所有宠物

@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/pet_species.dart';
 import '../../../core/constants/task_types.dart';
+import '../../../core/widgets/ip_video_widget.dart';
 import '../../../models/pet_model.dart';
 import '../../../models/task_log_model.dart';
 import '../../../providers/auth_provider.dart';
@@ -58,6 +59,7 @@ class ProfileScreen extends ConsumerWidget {
                     ripenessPercent: ripenessPercent,
                     growthStage: pet?.growthStage ?? 'seed',
                     growthStageName: pet?.growthStageDisplayName ?? '种子期',
+                    hasCompletedToday: logs.any((e) => e.completed),
                   ),
                   const SizedBox(height: 10),
                   _GrowthAtlasEntryCard(
@@ -262,6 +264,7 @@ class _HeroCard extends StatelessWidget {
   final int ripenessPercent;
   final String growthStage;
   final String growthStageName;
+  final bool hasCompletedToday;
 
   const _HeroCard({
     required this.childName,
@@ -269,6 +272,7 @@ class _HeroCard extends StatelessWidget {
     required this.ripenessPercent,
     required this.growthStage,
     required this.growthStageName,
+    required this.hasCompletedToday,
   });
 
   @override
@@ -339,17 +343,33 @@ class _HeroCard extends StatelessWidget {
                     color: Colors.white.withValues(alpha: 0.24),
                   ),
                 ),
-                child: Padding(
-                  padding: const EdgeInsets.all(6),
-                  child: Image.asset(
-                    _growthImageAsset(growthStage),
-                    fit: BoxFit.contain,
-                  ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(18),
+                  child: _buildIpDisplay(growthStage, hasCompletedToday),
                 ),
               ),
             ],
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildIpDisplay(String growthStage, bool hasCompletedToday) {
+    final stage = WatermelonGrowthStageExtension.fromName(growthStage);
+    final videoAsset = stage.ipVideoAsset(hasCompletedToday: hasCompletedToday);
+    if (videoAsset != null) {
+      return IpVideoWidget(
+        assetPath: videoAsset,
+        size: 76,
+        fallbackEmoji: '🌱',
+      );
+    }
+    return Padding(
+      padding: const EdgeInsets.all(6),
+      child: Image.asset(
+        _growthImageAsset(growthStage),
+        fit: BoxFit.contain,
       ),
     );
   }
@@ -360,8 +380,6 @@ class _HeroCard extends StatelessWidget {
         return 'assets/images/growth/seed.png';
       case 'sprout':
         return 'assets/images/growth/sprout.png';
-      case 'vine':
-        return 'assets/images/growth/vine.png';
       case 'flower':
         return 'assets/images/growth/flower.png';
       case 'fruit':

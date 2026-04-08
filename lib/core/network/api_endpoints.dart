@@ -17,8 +17,9 @@ class ApiEndpoints {
   static const me = '/api/users/me';
 
   // Pets
-  static const pets     = '/api/pets';
-  static const feedPet  = '/api/pets/feed';
+  static const pets       = '/api/pets';
+  static const feedPet    = '/api/pets/feed';
+  static const harvestPet = '/api/pets/harvest';
 
   // Tasks
   static const tasks = '/api/tasks';

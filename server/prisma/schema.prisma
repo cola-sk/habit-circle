@@ -37,13 +37,33 @@ model Pet {
   name         String
   species      String    // cat | dog | rabbit | dragon | hamster
   level        Int       @default(1)
-  totalPoints  Int       @default(0)
+  totalPoints  Int       @default(0)        // 历史累计总积分，不重置
+  currentCyclePoints Int @default(0)        // 当前周期积分，兑换后重置
+  harvestCount Int       @default(0)        // 历史兑换次数
   lastFedAt    DateTime?
   hungerStatus String    @default("normal") // happy|normal|hungry|starving|critical
+
+  harvests     HarvestRecord[]
 
   createdAt    DateTime  @default(now())
 
   @@map("pets")
+}
+
+// ── 兑换记录（工作人员手动确认是否已寄出真西瓜）──────────
+model HarvestRecord {
+  id          String   @id @default(cuid())
+  petId       String
+  pet         Pet      @relation(fields: [petId], references: [id], onDelete: Cascade)
+
+  cycleNumber Int                   // 第几季收成
+  pointsAtHarvest Int               // 收成时累计周期积分
+  redeemedAt  DateTime              // 孩子发起兑换的时间
+  shippedAt   DateTime?             // 工作人员标记已寄出的时间（null = 未发货）
+  note        String?               // 工作人员备注（如快递单号）
+
+  @@index([petId])
+  @@map("harvest_records")
 }
 
 // ── 任务记录 ──────────────────────────────────────────────────

@@ -39,6 +39,12 @@ class PetRepository {
     await _client.post(ApiEndpoints.feedPet, body: {'points': points});
   }
 
+  /// 兑换西瓜：重置周期积分，返回更新后的 pet
+  Future<PetModel> harvestPet() async {
+    final data = await _client.post(ApiEndpoints.harvestPet, body: {});
+    return PetModel.fromJson(data['pet'] as Map<String, dynamic>);
+  }
+
   Future<List<PetModel>> fetchCirclePets(String circleId) =>
       _fetchCirclePets(circleId);
 

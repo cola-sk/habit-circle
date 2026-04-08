@@ -40,6 +40,7 @@ dependencies:
   image_picker: ^1.1.2         # 拍照上传任务证据
   record: ^6.2.0               # 录音上传任务证据
   path_provider: ^2.1.4        # 临时文件目录
+  video_player: ^2.11.1
 
 dev_dependencies:
   flutter_test:

@@ -4,6 +4,7 @@ import 'package:gap/gap.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/pet_species.dart';
+import '../../../core/widgets/ip_video_widget.dart';
 import '../../../models/pet_model.dart';
 
 class PetDisplayWidget extends ConsumerWidget {
@@ -44,18 +45,12 @@ class PetDisplayWidget extends ConsumerWidget {
             ),
           ),
 
-          // 宠物主体（TODO: 替换为 Rive 动画）
+          // 宠物主体：优先播放 IP 视频，无视频时降级为 emoji
           Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // 宠物 emoji 占位（Rive 动画集成后替换）
-                Text(
-                  pet.species.emoji,
-                  style: TextStyle(
-                    fontSize: _petSize(pet.level),
-                  ),
-                ),
+                _buildIpImage(pet),
                 const Gap(8),
                 Text(
                   pet.name,
@@ -114,6 +109,28 @@ class PetDisplayWidget extends ConsumerWidget {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildIpImage(PetModel pet) {
+    final stage = WatermelonGrowthStageExtension.fromName(pet.growthStage);
+    // 用 hungerStatus 推断今日是否有完成任务（happy/normal = 有积分 = 完成过任务）
+    final hasCompletedToday = pet.hungerStatus == HungerStatus.happy ||
+        pet.hungerStatus == HungerStatus.normal;
+    final videoAsset = stage.ipVideoAsset(hasCompletedToday: hasCompletedToday);
+    final emojiFontSize = _petSize(pet.level);
+
+    if (videoAsset != null) {
+      return IpVideoWidget(
+        assetPath: videoAsset,
+        size: 160, // 视频展示尺寸，独立于 emoji 字号
+        fallbackEmoji: pet.species.emoji,
+      );
+    }
+    // 该阶段暂无视频，降级为 emoji
+    return Text(
+      pet.species.emoji,
+      style: TextStyle(fontSize: emojiFontSize),
     );
   }
 

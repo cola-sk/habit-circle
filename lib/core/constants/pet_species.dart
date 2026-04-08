@@ -111,7 +111,6 @@ extension HungerStatusExtension on HungerStatus {
 enum WatermelonGrowthStage {
   seed, // 种子期
   sprout, // 萌芽期
-  vine, // 抽藤期
   flower, // 开花期
   fruit, // 结果期
   ripe, // 成熟期
@@ -124,14 +123,37 @@ extension WatermelonGrowthStageExtension on WatermelonGrowthStage {
         return '种子期';
       case WatermelonGrowthStage.sprout:
         return '萌芽期';
-      case WatermelonGrowthStage.vine:
-        return '抽藤期';
       case WatermelonGrowthStage.flower:
         return '开花期';
       case WatermelonGrowthStage.fruit:
         return '结果期';
       case WatermelonGrowthStage.ripe:
         return '成熟期';
+    }
+  }
+
+  /// IP 形象动画视频路径，null 表示暂无视频（降级显示静态图）
+  /// [hasCompletedToday] 今日是否有已完成的任务
+  String? ipVideoAsset({required bool hasCompletedToday}) {
+    switch (this) {
+      case WatermelonGrowthStage.seed:
+        return hasCompletedToday
+            ? 'assets/animations/ip_zhongzi_happy.mp4'
+            : 'assets/animations/ip_zhongzi_hungry.mp4';
+      case WatermelonGrowthStage.sprout:
+        return hasCompletedToday
+            ? 'assets/animations/ip_faya_happy.mp4'
+            : 'assets/animations/ip_faya_hungry.mp4';
+      case WatermelonGrowthStage.flower:
+        return hasCompletedToday
+            ? 'assets/animations/ip_kaihua_happy.mp4'
+            : 'assets/animations/ip_kaihua_hungry.mp4';
+      case WatermelonGrowthStage.fruit:
+        return hasCompletedToday
+            ? 'assets/animations/ip_jieguo_happy.mp4'
+            : 'assets/animations/ip_jieguo_hungry.mp4';
+      case WatermelonGrowthStage.ripe:
+        return 'assets/animations/ip_ripe.mp4'; // 成熟期不区分状态
     }
   }
 
@@ -158,11 +180,10 @@ class PetLevelThresholds {
     12000, // Level 10
   ];
 
-  /// 六大成长阶段阈值（累计积分）
+  /// 五大成长阶段阈值（累计积分）
   static const List<int> growthStageThresholds = [
     0, // seed
     200, // sprout
-    500, // vine
     1000, // flower
     1800, // fruit
     3000, // ripe

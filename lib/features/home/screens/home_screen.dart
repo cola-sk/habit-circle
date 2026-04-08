@@ -380,7 +380,7 @@ class _TopHeader extends StatelessWidget {
                 ),
                 const SizedBox(width: 4),
                 Text(
-                  '$seedPoints 西瓜子',
+                  '$seedPoints 💧水滴',
                   style: const TextStyle(
                     color: Color(0xFF273034),
                     fontSize: 13,
@@ -706,7 +706,7 @@ class _TodayGrowthCard extends StatelessWidget {
                   ),
                 ),
                 const Text(
-                  '今日积分',
+                  '今日水滴',
                   style: TextStyle(
                     color: Color(0xCCFFFFFF),
                     fontSize: 11,

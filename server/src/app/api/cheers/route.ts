@@ -35,8 +35,7 @@ export async function POST(req: NextRequest) {
   return ok({ success: true });
 }
 
-// GET /api/cheers?date=YYYY-MM-DD — 查询我今天收到的加油，返回送加油人的昵称列表
-// 不传 date 默认今天；加上 ?unread=1 只返回未读
+// GET /api/cheers?date=YYYY-MM-DD — 查询我今天收到的【未读】加油，返回送加油人的昵称列表
 export async function GET(req: NextRequest) {
   const userId = await getAuthUser(req);
   if (!userId) return unauthorized();
@@ -45,7 +44,7 @@ export async function GET(req: NextRequest) {
   const date = searchParams.get("date") ?? new Date().toISOString().slice(0, 10);
 
   const cheers = await prisma.cheer.findMany({
-    where: { toUserId: userId, date },
+    where: { toUserId: userId, date, readAt: null },
     include: {
       fromUser: {
         select: { childName: true },
@@ -56,4 +55,19 @@ export async function GET(req: NextRequest) {
 
   const names = cheers.map((c) => c.fromUser.childName || "小朋友");
   return ok({ date, count: cheers.length, cheerers: names });
+}
+
+// PATCH /api/cheers — 将我今天所有未读加油标记为已读
+export async function PATCH(req: NextRequest) {
+  const userId = await getAuthUser(req);
+  if (!userId) return unauthorized();
+
+  const today = new Date().toISOString().slice(0, 10);
+
+  await prisma.cheer.updateMany({
+    where: { toUserId: userId, date: today, readAt: null },
+    data: { readAt: new Date() },
+  });
+
+  return ok({ success: true });
 }

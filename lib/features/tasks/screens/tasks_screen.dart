@@ -47,7 +47,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(
-                '已得 $todayPoints 分',
+                '已浇 $todayPoints 💧',
                 style: const TextStyle(
                   fontSize: 13,
                   color: AppColors.primary,

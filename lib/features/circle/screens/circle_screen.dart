@@ -487,7 +487,7 @@ class _StatsRow extends StatelessWidget {
           child: _StatCard(
             icon: Icons.emoji_events_rounded,
             iconColor: AppColors.secondary,
-            label: '总积分',
+            label: '总水滴',
             value: '$points',
           ),
         ),

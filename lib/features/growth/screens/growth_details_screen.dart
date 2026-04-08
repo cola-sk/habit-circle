@@ -199,7 +199,7 @@ class _GrowthContent extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        isMaxStage ? '已完成全部成长' : '$pointsToNext 西瓜子',
+                        isMaxStage ? '已完成全部成长' : '$pointsToNext 💧水滴',
                         style: const TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.w900,
@@ -363,7 +363,7 @@ class _TopBar extends StatelessWidget {
               ),
               const SizedBox(width: 6),
               Text(
-                '$seeds 西瓜子',
+                '$seeds 💧水滴',
                 style: const TextStyle(
                   fontSize: 13,
                   color: Color(0xFF273034),
@@ -493,7 +493,7 @@ class _StageCard extends StatelessWidget {
       case _StageStatus.active:
         return '正在成长中...';
       case _StageStatus.locked:
-        if (pointsToUnlock > 0) return '还需 $pointsToUnlock 西瓜子';
+        if (pointsToUnlock > 0) return '还需 $pointsToUnlock 💧水滴';
         return '尚未开启';
     }
   }

@@ -156,12 +156,13 @@ model SmsCode {
 // ── 加油记录 ──────────────────────────────────────────────────
 // 每人每天对同一目标最多加油一次（fromUserId + toUserId + date 唯一）
 model Cheer {
-  id         String   @id @default(cuid())
+  id         String    @id @default(cuid())
   fromUserId String
-  fromUser   User     @relation("CheersGiven",    fields: [fromUserId], references: [id], onDelete: Cascade)
+  fromUser   User      @relation("CheersGiven",    fields: [fromUserId], references: [id], onDelete: Cascade)
   toUserId   String
-  toUser     User     @relation("CheersReceived", fields: [toUserId],   references: [id], onDelete: Cascade)
-  date       String   // YYYY-MM-DD，同一天同一对只能一次
+  toUser     User      @relation("CheersReceived", fields: [toUserId],   references: [id], onDelete: Cascade)
+  date       String    // YYYY-MM-DD，同一天同一对只能一次
+  readAt     DateTime? // 收件人点"知道了"后写入，null = 未读
 
   createdAt  DateTime @default(now())
 

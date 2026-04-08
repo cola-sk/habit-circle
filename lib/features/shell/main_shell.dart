@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:hive_flutter/hive_flutter.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/widgets/cheer_message_dialog.dart';
@@ -9,6 +8,7 @@ import '../../providers/auth_provider.dart';
 import '../../providers/cheer_provider.dart';
 import '../../providers/circle_provider.dart';
 import '../../providers/pet_provider.dart';
+import '../../repositories/cheer_repository.dart';
 
 class MainShell extends ConsumerStatefulWidget {
   final Widget child;
@@ -29,11 +29,9 @@ class MainShell extends ConsumerStatefulWidget {
 class _MainShellState extends ConsumerState<MainShell>
     with WidgetsBindingObserver {
   static const _cheerTriggerPaths = {'/circle', '/profile'};
-  static const _hiveBoxName = 'cheer_shown';
 
-  /// 今日已展示过的加油者名字（内存缓存 + Hive 持久化）
-  Set<String> _shownCheerers = {};
-  String _shownDate = '';
+  /// 本次 App 会话内已展示过的加油者（内存缓存，防止 resume 重复弹）
+  final Set<String> _sessionShownCheerers = {};
 
   @override
   void initState() {
@@ -59,47 +57,19 @@ class _MainShellState extends ConsumerState<MainShell>
     final isLoggedIn = ref.read(authStateNotifierProvider).isLoggedIn;
     if (!isLoggedIn) return;
 
-    // 加载/刷新今日已展示集合
-    await _loadShownCheerers();
-
     ref.invalidate(todayCheersProvider);
     final cheerers = await ref.read(todayCheersProvider.future);
     if (!mounted) return;
 
-    // 过滤掉已展示过的加油者
+    // 过滤本次会话内已弹过的（防 resume 重复弹）
     final newCheerers =
-        cheerers.where((c) => !_shownCheerers.contains(c)).toList();
+        cheerers.where((c) => !_sessionShownCheerers.contains(c)).toList();
     if (newCheerers.isEmpty) return;
 
-    _shownCheerers.addAll(newCheerers);
-    await _saveShownCheerers();
+    _sessionShownCheerers.addAll(newCheerers);
+    // 先标记已读（乐观更新），防止弹窗期间切后台再回来重复触发
+    await ref.read(cheerRepositoryProvider).markTodayCheersAsRead();
     await CheerMessageDialog.showIfNeeded(context, newCheerers);
-  }
-
-  /// 从 Hive 加载今天已展示的加油者（跨日期自动清空旧数据）
-  Future<void> _loadShownCheerers() async {
-    final today = _todayKey();
-    final box = await Hive.openBox<List>(_hiveBoxName);
-    if (today != _shownDate) {
-      // 新的一天，清空内存缓存
-      _shownDate = today;
-      _shownCheerers = {};
-    }
-    final stored = box.get(today);
-    if (stored != null) {
-      _shownCheerers = stored.cast<String>().toSet();
-    }
-  }
-
-  /// 将今日已展示的加油者写入 Hive
-  Future<void> _saveShownCheerers() async {
-    final box = await Hive.openBox<List>(_hiveBoxName);
-    await box.put(_todayKey(), _shownCheerers.toList());
-  }
-
-  String _todayKey() {
-    final now = DateTime.now();
-    return '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
   }
 
   @override

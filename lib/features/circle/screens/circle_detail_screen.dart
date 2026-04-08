@@ -150,7 +150,7 @@ class _StatsRow extends StatelessWidget {
       children: [
         _StatChip(icon: '👦', value: '${circle.memberCount}', label: '成员'),
         const SizedBox(width: 10),
-        _StatChip(icon: '⭐', value: '$totalPoints', label: '总积分'),
+        _StatChip(icon: '⭐', value: '$totalPoints', label: '总水滴'),
         const SizedBox(width: 10),
         _StatChip(
           icon: '🌟',

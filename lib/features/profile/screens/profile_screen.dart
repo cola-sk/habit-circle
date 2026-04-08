@@ -248,7 +248,7 @@ class _TopBar extends StatelessWidget {
                 ),
                 const SizedBox(width: 6),
                 Text(
-                  '$seedPoints Seeds',
+                  '$seedPoints 💧水滴',
                   style: const TextStyle(
                     fontSize: 13,
                     color: Color(0xFF273034),
@@ -326,7 +326,7 @@ class _HeroCard extends StatelessWidget {
             children: [
               Expanded(
                 child: _HeroMetricChip(
-                  title: '当前种子',
+                  title: '今日水滴',
                   value: '$todayPoints',
                 ),
               ),
@@ -1047,7 +1047,7 @@ class _TaskTile extends StatelessWidget {
                         ),
                         const SizedBox(width: 3),
                         Text(
-                          '+${log.points} 种子',
+                          '+${log.points} 💧水滴',
                           style: const TextStyle(
                             fontSize: 12,
                             color: Color(0xFFB21D27),

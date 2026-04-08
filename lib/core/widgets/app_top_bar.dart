@@ -109,7 +109,7 @@ class AppTopBar extends ConsumerWidget implements PreferredSizeWidget {
   }
 }
 
-/// 西瓜子积分芯片，可单独使用
+/// 水滴积分芯片，可单独使用
 class _PointsChip extends StatelessWidget {
   final int points;
 
@@ -136,7 +136,7 @@ class _PointsChip extends StatelessWidget {
           const Text('�', style: TextStyle(fontSize: 14)),
           const SizedBox(width: 4),
           Text(
-            '$points 积分',
+            '$points 💧水滴',
             style: const TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w900,

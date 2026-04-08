@@ -16,6 +16,15 @@ class CheerRepository {
     await _client.post(ApiEndpoints.cheers, body: {'toUserId': toUserId});
   }
 
+  /// 将今天所有未读加油标记为已读（弹窗关闭后调用）
+  Future<void> markTodayCheersAsRead() async {
+    try {
+      await _client.patch(ApiEndpoints.cheers);
+    } on ApiException {
+      // 静默失败，下次启动仍可补标
+    }
+  }
+
   /// 查询今天收到的加油人昵称列表
   Future<List<String>> fetchTodayCheers() async {
     try {

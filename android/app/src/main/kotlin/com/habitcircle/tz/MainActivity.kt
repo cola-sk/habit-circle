@@ -1,4 +1,4 @@
-package com.habitcircle.habit_circle
+package com.habitcircle.tz
 
 import io.flutter.embedding.android.FlutterActivity
 

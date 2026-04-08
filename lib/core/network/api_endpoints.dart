@@ -6,7 +6,7 @@ class ApiEndpoints {
   /// 发布时：https://hc-server.tz0618.uk
   static const baseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'http://localhost:3000',
+    defaultValue: 'https://hc-server.tz0618.uk',
   );
 
   // Auth
